@@ -139,10 +139,12 @@ public class SelectFiles {
 					if(f.exists()){
 						 
 						String extension = path.substring(path.lastIndexOf('.'));
+						System.out.println(extension);
 						
 						//For BioC format files
-						if (extension.equals(".XML")){
+						if (extension.substring(1).equals("xml")){
 							
+							System.out.println("----------");
 							//To generate the plain text file, the original BioC XML format file segment 
 							 BioC2Alveo.writeAlveoFiles(path);
 							 //To generate annotation file
@@ -166,6 +168,7 @@ public class SelectFiles {
 						}
 						//For common files
 						else{	
+							System.out.println("++++++++++");
 							HttpClient httpclient = new HttpClient();
 							PostMethod filePost = new PostMethod( "https://app.alveo.edu.au/catalog/" +collection );
 						    
