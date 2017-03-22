@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.methods.multipart.StringPart;
 import mapping.BioC2Alveo;
 import mapping.BioC2Json;
 import upload.Metadata;
+import upload.UploadConstants;
 
 /** A upload function GUI class 
  * 
@@ -170,7 +171,7 @@ public class SelectFiles {
 						else{	
 							System.out.println("++++++++++");
 							HttpClient httpclient = new HttpClient();
-							PostMethod filePost = new PostMethod( "https://app.alveo.edu.au/catalog/" +collection );
+							PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL +collection );
 						    
 							File txtFile =  new File(path);
 							float txtFileBytes = txtFile.length();

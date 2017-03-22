@@ -42,9 +42,9 @@ public class CollectionUpload {
 					String docID = docIDs.get(i);				    
 				    
 				    HttpClient httpclient = new HttpClient();
-					File txtFile =  new File(path + "\\" + docID + ".txt");			
-					File xmlFile =  new File(path + "\\" + docID + ".xml");
-					File jsonFile =  new File(path + "\\" + docID + ".json");
+					File txtFile =  new File(path + File.separator + docID + ".txt");			
+					File xmlFile =  new File(path + File.separator + docID + ".xml");
+					File jsonFile =  new File(path + File.separator + docID + ".json");
 					float txtFileBytes = 0;
 					float xmlFileBytes = 0;
 					float jsonFileBytes = 0;
@@ -61,7 +61,7 @@ public class CollectionUpload {
 					}
 										
 					try{
-					    PostMethod filePost = new PostMethod( "https://app.alveo.edu.au/catalog/" +collection );
+					    PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL +collection );
 				    
 					    Part[] parts = {new FilePart( "file", txtFile ), 
 					    		new StringPart( "items",Metadata.createMetadata(docID,txtFileBytes).toString()) };

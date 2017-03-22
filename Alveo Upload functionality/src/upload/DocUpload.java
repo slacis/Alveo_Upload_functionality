@@ -34,12 +34,12 @@ public class DocUpload {
 		HttpClient httpclient = new HttpClient();
 		
 		
-		File file =  new File(path + "\\" + docID + ".xml");
+		File file =  new File(path + File.separator + docID + ".xml");
 		LOGGER.info( "FILE:" + file.exists() );
 		
 		try{
 			
-		    PostMethod filePost = new PostMethod( "https://app.alveo.edu.au/catalog/" + collection + "/" + docID);
+		    PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL + collection + "/" + docID);
 			    
 		    JSONObject jsonParam = new JSONObject();
 		    JSONObject context = new JSONObject(); 

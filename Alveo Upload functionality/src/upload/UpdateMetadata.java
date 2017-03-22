@@ -29,7 +29,7 @@ public class UpdateMetadata  extends JSONException{
 	    	
 	    if(data.length()!=0){
 	    	
-	    	String url = "https://app.alveo.edu.au/catalog/" + collection;
+	    	String url = UploadConstants.CATALOG_URL + collection;
 
 		    URL obj = new URL(url);
 		    HttpURLConnection conn = (HttpURLConnection) obj.openConnection();

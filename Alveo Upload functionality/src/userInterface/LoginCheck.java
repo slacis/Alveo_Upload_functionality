@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import upload.UploadConstants;
+
 /** A class to check if the API key is valid
  * 
  * 
@@ -17,7 +19,7 @@ public class LoginCheck {
 	public static String check(String key) throws IOException {
 		// TODO Auto-generated method stub
 		
-		String serviceURL =	"https://app.alveo.edu.au/catalog";
+		String serviceURL =	UploadConstants.CATALOG_URL;
 			
 		URL myURL = new URL(serviceURL);
 		HttpURLConnection conn = (HttpURLConnection)myURL.openConnection();

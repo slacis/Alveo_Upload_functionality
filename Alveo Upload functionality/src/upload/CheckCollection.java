@@ -14,7 +14,7 @@ public class CheckCollection {
 	public static String check(String collection)throws IOException {
 		// TODO Auto-generated method stub
 		
-		String serviceURL =	"https://app.alveo.edu.au/catalog/" + collection;
+		String serviceURL =	UploadConstants.CATALOG_URL + collection;
 			
 		URL myURL = new URL(serviceURL);
 		HttpURLConnection conn = (HttpURLConnection)myURL.openConnection();
