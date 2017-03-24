@@ -7,9 +7,21 @@ import javax.swing.JTextField;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import net.sf.json.JSONSerializer;
+import net.sf.json.JSONObject;
+import org.apache.commons.io.IOUtils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
 import java.awt.event.ActionEvent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+
 
 import java.awt.Font;
 
@@ -33,8 +45,27 @@ public class LoginInterface {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					// Check for existing Alveo config file and read in
+					String response = "0";
+					String apiKey = null;
+					//Change hard-coded directory on publish
+					File f = new File("/media/sf_sharedwithvirtual/alveo.config");
+					if(f.exists() && !f.isDirectory()) {
+						String jsonTxt = new String(Files.readAllBytes(Paths.get("/media/sf_sharedwithvirtual/alveo.config")));
+			            System.out.println(jsonTxt);
+			            JSONObject json = (JSONObject) JSONSerializer.toJSON(jsonTxt);     
+			            apiKey = json.getString("apiKey"); 
+			            
+					}
+					response = testApiKey(apiKey);
+					// Check API key from config and login if valid
+					if(Integer.valueOf(response) == 200){
+						SelectFiles window = new SelectFiles(apiKey);
+						window.frame.setVisible(true);
+					} else {
 					LoginInterface window = new LoginInterface();
 					window.frame.setVisible(true);
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -47,6 +78,19 @@ public class LoginInterface {
 	 */
 	public LoginInterface() {
 		initialize();
+	}
+	
+	//Test API Key
+	public static String testApiKey(String key){
+	String response = "0";
+	
+	try {
+		response = LoginCheck.check(key);
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	return response;
 	}
 
 	/**
@@ -70,12 +114,7 @@ public class LoginInterface {
 				
 				String key = textField.getText();
 				String response = "0";
-				try {
-					response = LoginCheck.check(key);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				response = testApiKey(key);
 		
 				if(Integer.valueOf(response) == 200){
 					frame.setVisible(false);
