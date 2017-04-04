@@ -127,8 +127,8 @@ public class MetadataBuilder {
 		
 		// ButtonGroup for metadata type
 		
-		userMeta  = new JRadioButton("User Metadata");
-		reqMeta  = new JRadioButton("Required Metadata");
+		userMeta  = new JRadioButton("Item Metadata");
+		reqMeta  = new JRadioButton("Collection Metadata");
 		docMeta  = new JRadioButton("Document Metadata");
 		
 		ButtonGroup operation = new ButtonGroup();
@@ -260,6 +260,9 @@ public class MetadataBuilder {
 				if (textAreaNo == 1) {
 				reqJson.append("\"" + comboBox.getSelectedItem().toString() +
 						"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
+				System.out.println(reqJson.getText());
+				JSONObject jsonObj = JSONObject.fromObject("{" + reqJson.getText() + "}");
+				System.out.println(jsonObj);
 				} else if (textAreaNo == 2) {
 				userJson.append("\"" + comboBox.getSelectedItem().toString() +
 						"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
