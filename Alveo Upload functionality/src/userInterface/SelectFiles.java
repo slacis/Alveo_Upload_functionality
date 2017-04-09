@@ -4,8 +4,11 @@ package userInterface;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -23,9 +26,12 @@ import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
+import org.apache.commons.io.FilenameUtils;
 
 import mapping.BioC2Alveo;
 import mapping.BioC2Json;
+import net.sf.json.JSONObject;
+import upload.CollectionUploadGeneral;
 import upload.Metadata;
 import upload.UploadConstants;
 
@@ -42,8 +48,8 @@ public class SelectFiles {
 	private JTextField Filechooser;
 	private JButton btnUpload;
 	private JButton btnCancel;
-
-	private String path;
+	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
+	private String path = null;
 	private String absolupath;
 	private String filename;
 	private JTextField textField;
@@ -63,7 +69,7 @@ public class SelectFiles {
 	 */
 	private void initialize(String key) {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 418, 449);
+		frame.setBounds(100, 100, 600, 600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
@@ -103,6 +109,8 @@ public class SelectFiles {
 			public void actionPerformed(ActionEvent arg0) {
 				
 				final JFileChooser selection = new JFileChooser();
+				// Allow for selection of individual file or directory
+				selection.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 				File file;
 				
 	            int returnVal = selection.showOpenDialog(frame);
@@ -117,6 +125,7 @@ public class SelectFiles {
 	                
 	                path = file.getPath();
 	                absolupath = file.getAbsolutePath();
+	                System.out.println(absolupath);
 	                absolupath = absolupath.substring(0,absolupath.lastIndexOf(File.separator));
 	                Filechooser.setText(path);
 	            } else {
@@ -124,8 +133,34 @@ public class SelectFiles {
 	            }
 			}
 		});
-		btnAdd.setBounds(317, 72, 60, 23);
+		btnAdd.setBounds(317, 72, 70, 23);
 		frame.getContentPane().add(btnAdd);
+		
+		// Open Metadata Editor button
+		JButton btnMetadata = new JButton("Metadata");
+		btnMetadata.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (path == null){
+				//Error message : Null Path 
+				JOptionPane.showMessageDialog(null, "Please select path", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+				} else {
+				MetadataBuilder builder = new MetadataBuilder(path, recItemMetadata);
+				builder.frame.setVisible(true);
+				// Listener to get built Metadata
+				builder.frame.addWindowListener(new WindowAdapter() {
+					  @Override
+					  public void windowClosing(WindowEvent e) {
+						  recItemMetadata = builder.recItemMetadata;
+						  System.out.println(recItemMetadata);
+					  }
+					 
+					});
+				}
+	
+			}
+		});
+		btnMetadata.setBounds(317, 100, 110, 23);
+		frame.getContentPane().add(btnMetadata);
 		
 		btnUpload = new JButton("Upload");
 		btnUpload.addActionListener(new ActionListener() {
@@ -139,11 +174,11 @@ public class SelectFiles {
 					//To check if the file path is existing
 					if(f.exists()){
 						 
-						String extension = path.substring(path.lastIndexOf('.'));
+						String extension = FilenameUtils.getExtension(f.getAbsolutePath());
 						System.out.println(extension);
 						
 						//For BioC format files
-						if (extension.substring(1).equals("xml")){
+						if (extension.equals("xml")){
 							
 							System.out.println("----------");
 							//To generate the plain text file, the original BioC XML format file segment 
@@ -167,8 +202,13 @@ public class SelectFiles {
 							 textField.setText(null);							
 							
 						}
-						//For common files
-						else{	
+						//For general collection
+						else if (f.isDirectory()) {
+							CollectionUploadGeneral.upload(path, key, collection, recItemMetadata);
+							
+						}
+						//For Common files
+							else{	
 							System.out.println("++++++++++");
 							HttpClient httpclient = new HttpClient();
 							PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL +collection );
@@ -220,7 +260,6 @@ public class SelectFiles {
 		});
 		btnNewButton.setBounds(317, 255, 71, 25);
 		frame.getContentPane().add(btnNewButton);
-		
-		
+
 	}
 }

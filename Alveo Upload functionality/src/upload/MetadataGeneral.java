@@ -13,7 +13,7 @@ import net.sf.json.JSONObject;
 
 public class MetadataGeneral {
 	
-	public static JSONArray createMetadata(String docID, String docName, float txtFileBytes, String fileExs){
+	public static JSONArray createMetadata(String docID, String docName, float txtFileBytes, String fileExs, JSONObject ausnc_doc_v){
 
 		
 		JSONArray docsMetadata = new JSONArray();			
@@ -24,7 +24,7 @@ public class MetadataGeneral {
 		JSONArray graph = new JSONArray();
 		JSONObject graph_v = new JSONObject();
 		JSONArray ausnc_doc = new JSONArray();
-		JSONObject ausnc_doc_v = new JSONObject();
+//		JSONObject ausnc_doc_v = new JSONObject();
 		JSONObject hcsvlab_display = new JSONObject();
 		JSONObject hcsvlab_indexable = new JSONObject();
 		context.element("ausnc" , "http://ns.ausnc.org.au/schemas/ausnc_md_model/");
@@ -38,20 +38,20 @@ public class MetadataGeneral {
 		graph_v.element("@id" , docID);
 		graph_v.element("@type" , "ausnc:AusNCObject");
 		
-		ausnc_doc_v.element("@id" , docName);
-		ausnc_doc_v.element("@type" , "foaf:Document");
-		ausnc_doc_v.element("dcterms:extent" , txtFileBytes);
-		ausnc_doc_v.element("dcterms:identifier" , docName);
-		//Removed #Text
-		ausnc_doc_v.element("dcterms:title" , docName+"#"+fileExs);
-		
-		// Check Extension
-		String value = UploadConstants.EXT_MAP.get("."+fileExs);
-		if (value != null) {
-		ausnc_doc_v.element("dcterms:type" , value);
-		} else {
-		ausnc_doc_v.element("dcterms:type" , "Other");
-		}
+//		ausnc_doc_v.element("@id" , docName);
+//		ausnc_doc_v.element("@type" , "foaf:Document");
+//		ausnc_doc_v.element("dcterms:extent" , txtFileBytes);
+//		ausnc_doc_v.element("dcterms:identifier" , docName);
+//		//Removed #Text
+//		ausnc_doc_v.element("dcterms:title" , docName+"#"+fileExs);
+//		
+//		// Check Extension
+//		String value = UploadConstants.EXT_MAP.get("."+fileExs);
+//		if (value != null) {
+//		ausnc_doc_v.element("dcterms:type" , value);
+//		} else {
+//		ausnc_doc_v.element("dcterms:type" , "Other");
+//		}
 					
 		ausnc_doc.add(ausnc_doc_v.toString());
 		graph_v.element("ausnc:document", ausnc_doc.toString());			
@@ -60,7 +60,8 @@ public class MetadataGeneral {
 //		hcsvlab_indexable.element("@id" , docID + fileExs);
 //		graph_v.element("hcsvlab:display_document", hcsvlab_display.toString());
 //		graph_v.element("hcsvlab:indexable_document", hcsvlab_indexable.toString());
-			
+		graph_v.element("dcterms:creator", "C. Watson and S. Cassidy");
+        graph_v.element("olac:language", "eng");
 		graph.add(graph_v.toString());
 		docMetadata_v.element("@graph", graph.toString());
 		docMetadata.element("metadata", docMetadata_v.toString());
