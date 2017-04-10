@@ -48,6 +48,18 @@ public class InitializeMetadata {
 		return ausnc_doc_v;
 	}
 	
+	// Initialize editable item level metadata
+	// First file uploaded selected arbitrarily
+	public static JSONObject initItem(String docID){
+		// Default required/recommended metadata
+		JSONObject graph_v = new JSONObject();
+		graph_v.element("@id" , docID);
+		graph_v.element("@type" , "ausnc:AusNCObject");
+		graph_v.element("dcterms:identifier" , docID);
+		return graph_v;
+	}
+	
+	
 
 	
 	

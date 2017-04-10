@@ -13,7 +13,7 @@ import net.sf.json.JSONObject;
 
 public class MetadataGeneral {
 	
-	public static JSONArray createMetadata(String docID, String docName, float txtFileBytes, String fileExs, JSONObject ausnc_doc_v){
+	public static JSONArray createMetadata(String docID, String docName, float txtFileBytes, String fileExs, JSONObject ausnc_doc_v, JSONObject graph_v){
 
 		
 		JSONArray docsMetadata = new JSONArray();			
@@ -22,7 +22,7 @@ public class MetadataGeneral {
 			
 		JSONObject context = new JSONObject();
 		JSONArray graph = new JSONArray();
-		JSONObject graph_v = new JSONObject();
+//		JSONObject graph_v = new JSONObject();
 		JSONArray ausnc_doc = new JSONArray();
 //		JSONObject ausnc_doc_v = new JSONObject();
 		JSONObject hcsvlab_display = new JSONObject();
@@ -35,8 +35,8 @@ public class MetadataGeneral {
 		context.element("hcsvlab" , "http://hcsvlab.org/vocabulary/");	
 		docMetadata_v.element("@context", context.toString());			
 			
-		graph_v.element("@id" , docID);
-		graph_v.element("@type" , "ausnc:AusNCObject");
+//		graph_v.element("@id" , docID);
+//		graph_v.element("@type" , "ausnc:AusNCObject");
 		
 //		ausnc_doc_v.element("@id" , docName);
 //		ausnc_doc_v.element("@type" , "foaf:Document");
@@ -55,13 +55,13 @@ public class MetadataGeneral {
 					
 		ausnc_doc.add(ausnc_doc_v.toString());
 		graph_v.element("ausnc:document", ausnc_doc.toString());			
-		graph_v.element("dcterms:identifier" , docID);//
+//		graph_v.element("dcterms:identifier" , docID);//
 //		hcsvlab_display.element("@id" , docID + "#Text");
 //		hcsvlab_indexable.element("@id" , docID + fileExs);
 //		graph_v.element("hcsvlab:display_document", hcsvlab_display.toString());
 //		graph_v.element("hcsvlab:indexable_document", hcsvlab_indexable.toString());
-		graph_v.element("dcterms:creator", "C. Watson and S. Cassidy");
-        graph_v.element("olac:language", "eng");
+//		graph_v.element("dcterms:creator", "C. Watson and S. Cassidy");
+//      graph_v.element("olac:language", "eng");
 		graph.add(graph_v.toString());
 		docMetadata_v.element("@graph", graph.toString());
 		docMetadata.element("metadata", docMetadata_v.toString());

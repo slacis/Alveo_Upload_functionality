@@ -91,7 +91,10 @@ public class CollectionUploadGeneral {
 							PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL +collection );
 
 							Part[] parts = {new FilePart( "file", file ), 
-									new StringPart( "items",MetadataGeneral.createMetadata(docID,docName,txtFileBytes, fileExs, itemMeta.get(docID)).toString()) };
+									new StringPart( "items",MetadataGeneral.createMetadata(docID,docName,
+											txtFileBytes, fileExs, itemMeta.get(docID+"_doc"), 
+											itemMeta.get(docID+"_item"))
+											.toString()) };
 
 							filePost.setRequestHeader( "X-API-KEY",key);
 							filePost.setRequestHeader( "Accept","application/json");

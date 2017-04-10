@@ -61,13 +61,13 @@ public class MetadataBuilder {
 	JFrame frame;
 	private JTextField textField;
     AutoCompleteDecorator decorator;
-    JRadioButton userMeta, reqMeta, docMeta;
-    JTextArea userJson, reqJson, docJson;
+    JRadioButton documentMeta, reqMeta, itemMeta;
+    JTextArea userJson, reqJson, docJson, upAllJson;
     private JComboBox comboBox, itemMetaCombo;
     int textAreaNo = 1;
     BufferedReader br = null;
     String[] values;
-    JScrollPane scrollBar1, scrollBar2, scrollBar3;
+    JScrollPane scrollBar1, scrollBar2, scrollBar3, scrollBar4;
     ArrayList<String> searchedMeta;
     Map<String, String> fileExtList;
     //General Metadata
@@ -167,10 +167,11 @@ public class MetadataBuilder {
 				}
 				//Populating metadata on ITEM level with first document found
 				//Check if metadata has been initialized previously first
-				if (first == 1 && !recItemMetadata.containsKey(docID)){
-					recItemMetadata.put(docID, InitializeMetadata.initRec(docID, docName, 
+				if (first == 1 && !recItemMetadata.containsKey(docID+"_doc")){
+					recItemMetadata.put(docID + "_doc", InitializeMetadata.initRec(docID, docName, 
 							fileBytes, fileExt));
 					System.out.println(recItemMetadata);
+					recItemMetadata.put(docID + "_item", InitializeMetadata.initItem(docID));
 					first = 0;
 				}
 			}
@@ -189,22 +190,22 @@ public class MetadataBuilder {
 		
 		// ButtonGroup for metadata type
 		
-		userMeta  = new JRadioButton("Item Metadata");
+		documentMeta  = new JRadioButton("Document Metadata");
 		reqMeta  = new JRadioButton("File Extensions");
-		docMeta  = new JRadioButton("Document Metadata");
+		itemMeta  = new JRadioButton("Item Metadata");
 		
 		ButtonGroup operation = new ButtonGroup();
 		operation.add(reqMeta);
-		operation.add(userMeta);
-		operation.add(docMeta);
+		operation.add(documentMeta);
+		operation.add(itemMeta);
 		reqMeta.setSelected(true);
 		
 		JPanel operPanel = new JPanel();
 		Border operBorder = BorderFactory.createTitledBorder("Operation");
 		operPanel.setBorder(operBorder);
 		operPanel.add(reqMeta);
-		operPanel.add(userMeta);
-		operPanel.add(docMeta);
+		operPanel.add(documentMeta);
+		operPanel.add(itemMeta);
 		operPanel.setBounds(50, 100, 200, 150);
 		
 		// JComboBox for metadata type selection
@@ -282,11 +283,20 @@ public class MetadataBuilder {
                  // or "comboBoxChanged"
                  //
                  if ("comboBoxChanged".equals(command)) {
-                	String tmpStr = recItemMetadata.get(selected).toString().
+                	 //Document 
+                	if (textAreaNo ==2){
+                	String tmpStr = recItemMetadata.get(selected + "_doc").toString().
                  			replaceAll(",", ",\n");
                  	userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
                  			
-                 System.out.println(recItemMetadata.get(selected).toString());
+//                 System.out.println(recItemMetadata.get(selected).toString());
+                	} else if (textAreaNo ==3){
+                	String tmpStr = recItemMetadata.get(selected + "_item").toString().
+                 			replaceAll(",", ",\n");
+                 	userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+                 			
+//                 System.out.println(recItemMetadata.get(selected).toString());
+                	}
                  }
              }
          });
@@ -319,6 +329,30 @@ public class MetadataBuilder {
 				if (textAreaNo == 1){
 				fileExtList = strtoHash(reqJson.getText());
 				System.out.print(fileExtList);
+				} else if (textAreaNo == 2){
+						recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_doc",
+								JSONObject.fromObject("{" + userJson.getText() + "}"));
+				
+					}
+				else if (textAreaNo == 3){
+						recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_item",
+								JSONObject.fromObject("{" + userJson.getText() + "}"));
+				
+					}
+				
+				
+			}
+		});
+		btnUpdate.setFont(font1);
+		btnUpdate.setBounds(700, 500, 80, 30);
+		
+		// Button to update all
+		JButton btnUpAll = new JButton("All");
+		btnUpAll.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (textAreaNo == 1){
+				fileExtList = strtoHash(reqJson.getText());
+				System.out.print(fileExtList);
 				} else {
 					if (textAreaNo == 2){
 						recItemMetadata.put(itemMetaCombo.getSelectedItem().toString(),
@@ -329,8 +363,8 @@ public class MetadataBuilder {
 				
 			}
 		});
-		btnUpdate.setFont(font1);
-		btnUpdate.setBounds(640, 500, 80, 30);
+		btnUpAll.setFont(font1);
+		btnUpAll.setBounds(700, 535, 80, 30);
 		
 		// Button to search for metadata
 		JButton btnSearch = new JButton("Search");
@@ -368,21 +402,29 @@ public class MetadataBuilder {
 		reqJson.setLineWrap(true);
 		scrollBar1 = new JScrollPane(reqJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollBar1.setBounds(300, 100, 400, 400);
+		scrollBar1.setBounds(300, 100, 400, 250);
+		
+		//Update all
+		upAllJson = new JTextArea();
+		upAllJson.setText(fileExtList.toString());
+		upAllJson.setLineWrap(true);
+		scrollBar4 = new JScrollPane(upAllJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollBar4.setBounds(300, 370, 400, 200);
 		
 		//User
 		userJson = new JTextArea();
 		userJson.setLineWrap(true);
 		scrollBar2 = new JScrollPane(userJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollBar2.setBounds(300, 100, 400, 400);
+		scrollBar2.setBounds(300, 100, 400, 250);
 		
 		//Doc
 		docJson = new JTextArea();
 		docJson.setLineWrap(true);
 		scrollBar3 = new JScrollPane(docJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollBar3.setBounds(300, 100, 400, 400);
+		scrollBar3.setBounds(300, 100, 400, 250);
 		
 		
 		//Button to add metadata to box
@@ -394,16 +436,12 @@ public class MetadataBuilder {
 				System.out.println(reqJson.getText());
 				JSONObject jsonObj = JSONObject.fromObject("{" + reqJson.getText() + "}");
 				System.out.println(jsonObj);
-				} else if (textAreaNo == 2) {
+				} else if (textAreaNo == 2 || textAreaNo == 3) {
 				String tmpStr = userJson.getText();
 				userJson.append("\"" + comboBox.getSelectedItem().toString() +
 						"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
 				
-				} else {
-				docJson.append("\"" + comboBox.getSelectedItem().toString() +
-						"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
-				}
-			
+				} 		
 			
 			}	
 		});
@@ -425,12 +463,12 @@ public class MetadataBuilder {
 
 	    });
 	    
-	    userMeta.addActionListener(new ActionListener() {
+	    documentMeta.addActionListener(new ActionListener() {
 
 	        @Override
 	        public void actionPerformed(ActionEvent e) {
 	            // TODO Auto-generated method stub
-	            if(userMeta.isSelected()) {
+	            if(documentMeta.isSelected()) {
 	            	textAreaNo = 2;
 	                scrollBar1.setVisible(false);
 	                scrollBar2.setVisible(true);
@@ -441,16 +479,17 @@ public class MetadataBuilder {
 
 	    });
 	    
-	    docMeta.addActionListener(new ActionListener() {
+	    itemMeta.addActionListener(new ActionListener() {
 
 	        @Override
 	        public void actionPerformed(ActionEvent e) {
 	            // TODO Auto-generated method stub
-	            if(docMeta.isSelected()) {
+	            if(itemMeta.isSelected()) {
 	            	textAreaNo = 3;
 	                scrollBar1.setVisible(false);
-	                scrollBar2.setVisible(false);
-	                scrollBar3.setVisible(true);
+	                scrollBar2.setVisible(true);
+//	                scrollBar3.setVisible(true);
+	                itemMetaCombo.setVisible(true);
 	            }
 	        }
 
@@ -460,11 +499,13 @@ public class MetadataBuilder {
 		frame.getContentPane().add(scrollBar1);
 		frame.getContentPane().add(scrollBar2);
 		frame.getContentPane().add(scrollBar3);
+		frame.getContentPane().add(scrollBar4);
 	    frame.getContentPane().add(comboBox);
 	    frame.getContentPane().add(itemMetaCombo);
 		frame.getContentPane().add(textField);
 		frame.getContentPane().add(btnAddMeta);
 		frame.getContentPane().add(btnUpdate);
+		frame.getContentPane().add(btnUpAll);
 		frame.getContentPane().add(btnSearch);
 		frame.getContentPane().add(lblMetadataT);
 		frame.getContentPane().add(lblMetadata);
