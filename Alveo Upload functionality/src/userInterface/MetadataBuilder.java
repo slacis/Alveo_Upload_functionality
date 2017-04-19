@@ -40,13 +40,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Stack;
 import java.awt.event.ActionEvent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.table.DefaultTableModel;
 
 /** A GUI to edit metadata
  * 
@@ -60,36 +63,40 @@ public class MetadataBuilder {
 	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
 	JFrame frame;
 	private JTextField textField;
-    AutoCompleteDecorator decorator;
-    JRadioButton documentMeta, reqMeta, itemMeta;
-    JTextArea userJson, reqJson, docJson, upAllJson;
-    private JComboBox comboBox, itemMetaCombo;
-    int textAreaNo = 1;
-    BufferedReader br = null;
-    String[] values;
-    JScrollPane scrollBar1, scrollBar2, scrollBar3, scrollBar4;
-    ArrayList<String> searchedMeta;
-    Map<String, String> fileExtList;
-    //General Metadata
-    JSONObject graph_v = new JSONObject();
-    //Context and details
-    JSONObject context = new JSONObject();
+	AutoCompleteDecorator decorator;
+	JRadioButton documentMeta, reqMeta, itemMeta;
+	JTextArea userJson, reqJson, docJson, upAllJson;
+	private JComboBox comboBox, itemMetaCombo;
+	int textAreaNo = 1;
+	BufferedReader br = null;
+	String[] values;
+	JScrollPane scrollBar1, scrollBar2, scrollBar3, scrollBar4, scrollTable1;
+	ArrayList<String> searchedMeta;
+	Map<String, String> fileExtList;
+	//General Metadata
+	JSONObject graph_v = new JSONObject();
+	//Context and details
+	JSONObject context = new JSONObject();
+	//Table related 
+	private String[] colNames = { "Metadata type", "Metadata" };
+	private DefaultTableModel model = new DefaultTableModel(colNames, 0);
+	private JTable table = new JTable(model);
 
 	/**
 	 * Launch the application.
 	 */
-//	public static void main(String[] args) {
-//		EventQueue.invokeLater(new Runnable() {
-//			public void run() {
-//				try {
-//					MetadataBuilder window = new MetadataBuilder();
-//					window.frame.setVisible(true);
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		});
-//	}
+	//	public static void main(String[] args) {
+	//		EventQueue.invokeLater(new Runnable() {
+	//			public void run() {
+	//				try {
+	//					MetadataBuilder window = new MetadataBuilder();
+	//					window.frame.setVisible(true);
+	//				} catch (Exception e) {
+	//					e.printStackTrace();
+	//				}
+	//			}
+	//		});
+	//	}
 
 	/**
 	 * Create the application.
@@ -97,20 +104,20 @@ public class MetadataBuilder {
 	public MetadataBuilder(String path, HashMap<String, JSONObject> recItemMetadata) {
 		initialize(path, recItemMetadata);
 	}
-	
+
 	// Search through array for relevant metadata name
 	public static ArrayList<String> metadataSearch(String[] values, String q){
-    ArrayList<String> ar = new ArrayList<String>();
-    System.out.println("hello" + q);
-    for (String s: values) {           
-        if(s.contains(q)){
-        ar.add(s); 
-        System.out.println(ar.toArray());
-        }
-    }
-    return ar;
+		ArrayList<String> ar = new ArrayList<String>();
+		System.out.println("hello" + q);
+		for (String s: values) {           
+			if(s.contains(q)){
+				ar.add(s); 
+				System.out.println(ar.toArray());
+			}
+		}
+		return ar;
 	}
-	
+
 	// Function acquired from stackoverflow for convenience
 	public static Map<String, String> strtoHash (String value){
 		value = value.substring(1, value.length()-1);          
@@ -120,11 +127,11 @@ public class MetadataBuilder {
 		for(String pair : keyValuePairs)                        
 		{
 			//split the pairs to get key and value 
-		    String[] entry = pair.split("=");                   
-		    map.put(entry[0].trim(), entry[1].trim());      
+			String[] entry = pair.split("=");                   
+			map.put(entry[0].trim(), entry[1].trim());      
 		}	//add them to the hashmap and trim whitespace
 		return map;
-		
+
 	}
 
 	/**
@@ -134,18 +141,18 @@ public class MetadataBuilder {
 		this.recItemMetadata = recItemMetadata;
 		// Hash map for unknown file extensions
 		fileExtList = new HashMap<String, String>();
-		
-		
+
+
 		//This code is used to get directories/sub-directories and then search for
 		//their file types. File types that are not in the list of known file extensions
 		//Will be populated and can be specified by the user, or will otherwise be set to
 		//"Other" by default
 		//An ArrayList containing JSONObjects, which contains item level metadata, will be
 		//populated and can be changed by the user in the editor.
-		
+
 		//Populate item metadata into these ArrayLists
-		
-//		ArrayList<JSONObject> finalItemMetadata = new ArrayList<JSONObject>();
+
+		//		ArrayList<JSONObject> finalItemMetadata = new ArrayList<JSONObject>();
 		ArrayList<String> itemNameList = new ArrayList<String>();
 		//Get sub-directories
 		List<File> subDirs = CollectionUploadGeneral.getDirs(path);
@@ -177,29 +184,29 @@ public class MetadataBuilder {
 			}
 		}
 		System.out.println(fileExtList);
-			
+
 		Font font1 = new Font("SansSerif", Font.BOLD, 12);
 		frame = new JFrame();
 		frame.setSize(800,600);
 		frame.setLocationRelativeTo(null);
-//		frame.setBounds(100, 100, 418, 449);
+		//		frame.setBounds(100, 100, 418, 449);
 		frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 		frame.setTitle("Metadata Builder");
-		
+
 		// ButtonGroup for metadata type
-		
+
 		documentMeta  = new JRadioButton("Document Metadata");
 		reqMeta  = new JRadioButton("File Extensions");
 		itemMeta  = new JRadioButton("Item Metadata");
-		
+
 		ButtonGroup operation = new ButtonGroup();
 		operation.add(reqMeta);
 		operation.add(documentMeta);
 		operation.add(itemMeta);
 		reqMeta.setSelected(true);
-		
+
 		JPanel operPanel = new JPanel();
 		Border operBorder = BorderFactory.createTitledBorder("Operation");
 		operPanel.setBorder(operBorder);
@@ -207,195 +214,199 @@ public class MetadataBuilder {
 		operPanel.add(documentMeta);
 		operPanel.add(itemMeta);
 		operPanel.setBounds(50, 100, 200, 150);
-		
+
 		// JComboBox for metadata type selection
-	    try{
-	    	br = new BufferedReader(new FileReader("csv/metadatatypes.csv"));
-	        String line = null;
-	        line = br.readLine();
-	        values = line.split(",");
-	        Arrays.sort(values);
-	    	comboBox = new JComboBox(new DefaultComboBoxModel(values));
-//	    	AutoCompleteDecorator.decorate(comboBox);
-	    	comboBox.setEditable(true);
-	    	comboBox.setBounds(50,50,300,30);
-	    } catch (IOException e) {
+		try{
+			br = new BufferedReader(new FileReader("csv/metadatatypes.csv"));
+			String line = null;
+			line = br.readLine();
+			values = line.split(",");
+			Arrays.sort(values);
+			comboBox = new JComboBox(new DefaultComboBoxModel(values));
+			//	    	AutoCompleteDecorator.decorate(comboBox);
+			comboBox.setEditable(true);
+			comboBox.setBounds(50,50,300,30);
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	   
-	    
-        // Create an ActionListener for the JComboBox component.
-        //
-        comboBox.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                //
-                // Get the source of the component, which is our combo
-                // box.
-                //
-                JComboBox comboBox = (JComboBox) event.getSource();
 
-                //
-                // Print the selected items and the action command.
-                //
-                Object selected = comboBox.getSelectedItem();
-                System.out.println("Selected Item  = " + selected);
-                String command = event.getActionCommand();
-                System.out.println("Action Command = " + command);
 
-                //
-                // Detect whether the action command is "comboBoxEdited"
-                // or "comboBoxChanged"
-                //
-//                if ("comboBoxEdited".equals(command)) {
-//                	
-//                	searchedMeta = metadataSearch(values,selected.toString());
-//                	System.out.println(searchedMeta.toArray());
-//                	DefaultComboBoxModel model = new DefaultComboBoxModel( searchedMeta.toArray());
-//                		comboBox.setModel( model );
-//
-//
-//                    System.out.println("User has typed a string in " +
-//                            "the combo box.");
-//                }
-            }
-        });
-        
-	    //JComboBox for item metadata
-    	itemMetaCombo = new JComboBox(new DefaultComboBoxModel(itemNameList.toArray()));
-    	itemMetaCombo.setBounds(50,300,200,30);
-    	itemMetaCombo.setVisible(false);
-    	
-    	 itemMetaCombo.addActionListener(new ActionListener() {
-             public void actionPerformed(ActionEvent event) {
-                 JComboBox itemMetaCombo = (JComboBox) event.getSource();
+		// Create an ActionListener for the JComboBox component.
+		//
+		comboBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				//
+				// Get the source of the component, which is our combo
+				// box.
+				//
+				JComboBox comboBox = (JComboBox) event.getSource();
 
-                 //
-                 // Print the selected items and the action command.
-                 //
-                 Object selected = itemMetaCombo.getSelectedItem();
-                 System.out.println("Selected Item  = " + selected);
-                 String command = event.getActionCommand();
-                 System.out.println("Action Command = " + command);
+				//
+				// Print the selected items and the action command.
+				//
+				Object selected = comboBox.getSelectedItem();
+				System.out.println("Selected Item  = " + selected);
+				String command = event.getActionCommand();
+				System.out.println("Action Command = " + command);
 
-                 //
-                 // Detect whether the action command is "comboBoxEdited"
-                 // or "comboBoxChanged"
-                 //
-                 if ("comboBoxChanged".equals(command)) {
-                	 //Document 
-                	if (textAreaNo ==2){
-                	String tmpStr = recItemMetadata.get(selected + "_doc").toString().
-                 			replaceAll(",", ",\n");
-                 	userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
-                 			
-//                 System.out.println(recItemMetadata.get(selected).toString());
-                	} else if (textAreaNo ==3){
-                	String tmpStr = recItemMetadata.get(selected + "_item").toString().
-                 			replaceAll(",", ",\n");
-                 	userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
-                 			
-//                 System.out.println(recItemMetadata.get(selected).toString());
-                	}
-                 }
-             }
-         });
-		
+				//
+				// Detect whether the action command is "comboBoxEdited"
+				// or "comboBoxChanged"
+				//
+				//                if ("comboBoxEdited".equals(command)) {
+				//                	
+				//                	searchedMeta = metadataSearch(values,selected.toString());
+				//                	System.out.println(searchedMeta.toArray());
+				//                	DefaultComboBoxModel model = new DefaultComboBoxModel( searchedMeta.toArray());
+				//                		comboBox.setModel( model );
+				//
+				//
+				//                    System.out.println("User has typed a string in " +
+				//                            "the combo box.");
+				//                }
+			}
+		});
+
+		//JComboBox for item metadata
+		itemMetaCombo = new JComboBox(new DefaultComboBoxModel(itemNameList.toArray()));
+		itemMetaCombo.setBounds(50,300,200,30);
+		itemMetaCombo.setVisible(false);
+
+		itemMetaCombo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				JComboBox itemMetaCombo = (JComboBox) event.getSource();
+
+				//
+				// Print the selected items and the action command.
+				//
+				Object selected = itemMetaCombo.getSelectedItem();
+				System.out.println("Selected Item  = " + selected);
+				String command = event.getActionCommand();
+				System.out.println("Action Command = " + command);
+
+				//
+				// Detect whether the action command is "comboBoxEdited"
+				// or "comboBoxChanged"
+				//
+				if ("comboBoxChanged".equals(command)) {
+					//Document 
+					if (textAreaNo ==2){
+						String tmpStr = recItemMetadata.get(selected + "_doc").toString().
+								replaceAll(",", ",\n");
+						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+						//Load into table
+						jsonToTable(recItemMetadata.get(selected + "_doc"));
+						table.repaint();
+
+						//                 System.out.println(recItemMetadata.get(selected).toString());
+					} else if (textAreaNo ==3){
+						String tmpStr = recItemMetadata.get(selected + "_item").toString().
+								replaceAll(",", ",\n");
+						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+						//Load into table
+						jsonToTable(recItemMetadata.get(selected + "_item"));
+
+						//                 System.out.println(recItemMetadata.get(selected).toString());
+					}
+				}
+			}
+		});
+
+
+
+
 		// Text field for adding metadata info
 		textField = new JTextField();
 		textField.setFont(font1);
 		textField.setBounds(420, 50, 271, 30);
 		textField.setColumns(20);
-	    
+
 		// Button to add metadata
 		JButton btnAddMeta = new JButton("Add");
-		btnAddMeta.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				//Code to add metadata-type and metadata
-				
-			}
-		});
 		btnAddMeta.setFont(font1);
-		btnAddMeta.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
 		btnAddMeta.setBounds(680, 50, 80, 30);
-		
+
 		// Button to update
 		JButton btnUpdate = new JButton("Update");
 		btnUpdate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (textAreaNo == 1){
-				fileExtList = strtoHash(reqJson.getText());
-				System.out.print(fileExtList);
+					fileExtList = strtoHash(reqJson.getText());
+					System.out.print(fileExtList);
 				} else if (textAreaNo == 2){
-						recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_doc",
-								JSONObject.fromObject("{" + userJson.getText() + "}"));
-				
-					}
+					recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_doc",
+							getTableData(table));
+					
+
+				}
 				else if (textAreaNo == 3){
-						recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_item",
-								JSONObject.fromObject("{" + userJson.getText() + "}"));
-				
-					}
-				
-				
+					recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_item",
+							getTableData(table));
+
+				}
+
+
 			}
 		});
 		btnUpdate.setFont(font1);
 		btnUpdate.setBounds(700, 500, 80, 30);
-		
+
 		// Button to update all
 		JButton btnUpAll = new JButton("All");
 		btnUpAll.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (textAreaNo == 1){
-				fileExtList = strtoHash(reqJson.getText());
-				System.out.print(fileExtList);
+					fileExtList = strtoHash(reqJson.getText());
+					System.out.print(fileExtList);
 				} else {
 					if (textAreaNo == 2){
 						recItemMetadata.put(itemMetaCombo.getSelectedItem().toString(),
 								JSONObject.fromObject("{" + userJson.getText() + "}"));
-				
+
 					}
 				}
-				
+
 			}
 		});
 		btnUpAll.setFont(font1);
 		btnUpAll.setBounds(700, 535, 80, 30);
-		
+
 		// Button to search for metadata
 		JButton btnSearch = new JButton("Search");
 		btnSearch.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String selected = comboBox.getSelectedItem().toString();
-               	searchedMeta = metadataSearch(values,selected.toString());
-            	System.out.println(searchedMeta.toArray());
-            	DefaultComboBoxModel model = new DefaultComboBoxModel( searchedMeta.toArray());
-            		comboBox.setModel( model );
+				searchedMeta = metadataSearch(values,selected.toString());
+				System.out.println(searchedMeta.toArray());
+				DefaultComboBoxModel model = new DefaultComboBoxModel( searchedMeta.toArray());
+				comboBox.setModel( model );
 
-				}
+			}
 
-			});
-		
+		});
+
 		btnSearch.setFont(font1);
 		btnSearch.setBounds(345, 50, 70, 30);
 
-		
+
 		//Label for Metadata type
 		JLabel lblMetadataT = new JLabel("Metadata Type");
 		lblMetadataT.setFont(font1);
 		lblMetadataT.setBounds(50, 25, 311, 23);
-		
+
 		//Label for Metadata
 		JLabel lblMetadata = new JLabel("Metadata");
 		lblMetadata.setFont(font1);
 		lblMetadata.setBounds(420, 25, 311, 23);
-		
+
+		//Table for metadata editing
+		scrollTable1 = new JScrollPane(table);
+		scrollTable1.setBounds(300, 100, 400, 250);
+
+
 		//TextAreas for Metadata
-		
+
 		//Required
 		reqJson = new JTextArea();
 		reqJson.setText(fileExtList.toString());
@@ -403,7 +414,7 @@ public class MetadataBuilder {
 		scrollBar1 = new JScrollPane(reqJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollBar1.setBounds(300, 100, 400, 250);
-		
+
 		//Update all
 		upAllJson = new JTextArea();
 		upAllJson.setText(fileExtList.toString());
@@ -411,97 +422,108 @@ public class MetadataBuilder {
 		scrollBar4 = new JScrollPane(upAllJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollBar4.setBounds(300, 370, 400, 200);
-		
+
 		//User
 		userJson = new JTextArea();
 		userJson.setLineWrap(true);
 		scrollBar2 = new JScrollPane(userJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollBar2.setBounds(300, 100, 400, 250);
-		
+
 		//Doc
 		docJson = new JTextArea();
 		docJson.setLineWrap(true);
 		scrollBar3 = new JScrollPane(docJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollBar3.setBounds(300, 100, 400, 250);
-		
-		
+
+
+
 		//Button to add metadata to box
 		btnAddMeta.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (textAreaNo == 1) {
-				reqJson.append("\"" + comboBox.getSelectedItem().toString() +
-						"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
-				System.out.println(reqJson.getText());
-				JSONObject jsonObj = JSONObject.fromObject("{" + reqJson.getText() + "}");
-				System.out.println(jsonObj);
+					//				reqJson.append("\"" + comboBox.getSelectedItem().toString() +
+					//						"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
+					//				System.out.println(reqJson.getText());
+					//				JSONObject jsonObj = JSONObject.fromObject("{" + reqJson.getText() + "}");
+					//				System.out.println(jsonObj);
 				} else if (textAreaNo == 2 || textAreaNo == 3) {
-				String tmpStr = userJson.getText();
-				userJson.append("\"" + comboBox.getSelectedItem().toString() +
-						"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
-				
+//					String tmpStr = userJson.getText();
+//					userJson.append("\"" + comboBox.getSelectedItem().toString() +
+//							"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
+					String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
+					model.addRow(array);
+					getTableData(table);
+
 				} 		
-			
+
 			}	
+
+
+
+
 		});
-		
-	    // Listeners for radio buttons
-	    reqMeta.addActionListener(new ActionListener() {
 
-	        @Override
-	        public void actionPerformed(ActionEvent e) {
-	            // TODO Auto-generated method stub
-	            if(reqMeta.isSelected()) {
-	            	textAreaNo = 1;
-	                scrollBar1.setVisible(true);
-	                scrollBar2.setVisible(false);
-	                scrollBar3.setVisible(false);
-	                itemMetaCombo.setVisible(false);
-	            }
-	        }
 
-	    });
-	    
-	    documentMeta.addActionListener(new ActionListener() {
 
-	        @Override
-	        public void actionPerformed(ActionEvent e) {
-	            // TODO Auto-generated method stub
-	            if(documentMeta.isSelected()) {
-	            	textAreaNo = 2;
-	                scrollBar1.setVisible(false);
-	                scrollBar2.setVisible(true);
-	                scrollBar3.setVisible(false);
-	                itemMetaCombo.setVisible(true);
-	            }
-	        }
+		// Listeners for radio buttons
+		reqMeta.addActionListener(new ActionListener() {
 
-	    });
-	    
-	    itemMeta.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(reqMeta.isSelected()) {
+					textAreaNo = 1;
+					scrollBar1.setVisible(true);
+					scrollBar2.setVisible(false);
+					scrollBar3.setVisible(false);
+					itemMetaCombo.setVisible(false);
+				}
+			}
 
-	        @Override
-	        public void actionPerformed(ActionEvent e) {
-	            // TODO Auto-generated method stub
-	            if(itemMeta.isSelected()) {
-	            	textAreaNo = 3;
-	                scrollBar1.setVisible(false);
-	                scrollBar2.setVisible(true);
-//	                scrollBar3.setVisible(true);
-	                itemMetaCombo.setVisible(true);
-	            }
-	        }
+		});
 
-	    });
+		documentMeta.addActionListener(new ActionListener() {
 
-		
-		frame.getContentPane().add(scrollBar1);
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(documentMeta.isSelected()) {
+					textAreaNo = 2;
+					scrollBar1.setVisible(false);
+					scrollBar2.setVisible(true);
+					scrollBar3.setVisible(false);
+					itemMetaCombo.setVisible(true);
+				}
+			}
+
+		});
+
+		itemMeta.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(itemMeta.isSelected()) {
+					textAreaNo = 3;
+					scrollBar1.setVisible(false);
+					scrollBar2.setVisible(true);
+					//	                scrollBar3.setVisible(true);
+					itemMetaCombo.setVisible(true);
+				}
+
+			}
+
+		});
+
+
+		frame.getContentPane().add(scrollTable1);
 		frame.getContentPane().add(scrollBar2);
 		frame.getContentPane().add(scrollBar3);
 		frame.getContentPane().add(scrollBar4);
-	    frame.getContentPane().add(comboBox);
-	    frame.getContentPane().add(itemMetaCombo);
+		frame.getContentPane().add(comboBox);
+		frame.getContentPane().add(itemMetaCombo);
 		frame.getContentPane().add(textField);
 		frame.getContentPane().add(btnAddMeta);
 		frame.getContentPane().add(btnUpdate);
@@ -511,5 +533,41 @@ public class MetadataBuilder {
 		frame.getContentPane().add(lblMetadata);
 		frame.getContentPane().add(operPanel);
 		frame.setVisible(true);
+	}
+	
+	//Table related auxillary functions
+	
+	// Get data from table to array 
+	//REWRITE THIS CODE
+	public JSONObject getTableData (JTable table) {
+		JSONObject dataFromTable = new JSONObject();
+		DefaultTableModel dtm = (DefaultTableModel) table.getModel();
+		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
+		//	    Object[][] tableData = new Object[nRow][nCol];
+		for (int i = 0 ; i < nRow ; i++){
+			dataFromTable.element((String)dtm.getValueAt(i,0), (String)dtm.getValueAt(i,1));
+		}
+		System.out.println(dataFromTable.toString());
+		return dataFromTable;
+
+
+	}
+	public void jsonToTable (JSONObject tableData) {
+		clearTable();
+		for (Object key : tableData.keySet()) {
+			//based on you key types
+			String keyN = (String) key;
+			System.out.println(keyN);
+			System.out.println(tableData.get(keyN));
+			String value = tableData.get(keyN).toString();
+			String[] array = {keyN, value};
+			model.addRow(array);	
+		}
+	}
+	public void clearTable(){
+		int rowCount = model.getRowCount();
+		for (int i = rowCount - 1; i >= 0; i--) {
+			model.removeRow(i);
+		}
 	}
 }

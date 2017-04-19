@@ -90,7 +90,13 @@ public class CollectionUploadGeneral {
 						try{
 							PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL +collection );
 
-							Part[] parts = {new FilePart( "file", file ), 
+							
+//							Part[] parts = {new FilePart( "file", file ), 
+//									new StringPart( "items",MetadataGeneral.createMetadata(docID,docName,
+//											txtFileBytes, fileExs, itemMeta.get(docID+"_doc"), 
+//											itemMeta.get(docID+"_item"))
+//											.toString()) };
+							Part[] parts = {
 									new StringPart( "items",MetadataGeneral.createMetadata(docID,docName,
 											txtFileBytes, fileExs, itemMeta.get(docID+"_doc"), 
 											itemMeta.get(docID+"_item"))

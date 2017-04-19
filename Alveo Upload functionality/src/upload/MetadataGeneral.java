@@ -54,7 +54,7 @@ public class MetadataGeneral {
 //		}
 					
 		ausnc_doc.add(ausnc_doc_v.toString());
-		graph_v.element("ausnc:document", ausnc_doc.toString());			
+//		graph_v.element("ausnc:document", ausnc_doc.toString());			
 //		graph_v.element("dcterms:identifier" , docID);//
 //		hcsvlab_display.element("@id" , docID + "#Text");
 //		hcsvlab_indexable.element("@id" , docID + fileExs);

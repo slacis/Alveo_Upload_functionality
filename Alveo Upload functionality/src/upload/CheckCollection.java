@@ -30,7 +30,7 @@ public class CheckCollection {
 		//To get Alveo server HTTP response code
 		int responseCode = conn.getResponseCode();		
 		String rCode =  Integer.toString(responseCode);
-		
+		System.out.println(rCode);
 		return rCode;
 		
 		
