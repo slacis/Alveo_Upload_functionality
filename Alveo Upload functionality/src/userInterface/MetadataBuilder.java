@@ -61,12 +61,13 @@ import javax.swing.table.DefaultTableModel;
 
 public class MetadataBuilder {
 	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
+	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
 	JFrame frame;
 	private JTextField textField;
 	AutoCompleteDecorator decorator;
 	JRadioButton documentMeta, reqMeta, itemMeta;
 	JTextArea userJson, reqJson, docJson, upAllJson;
-	private JComboBox comboBox, itemMetaCombo;
+	private JComboBox comboBox, itemMetaCombo, docMetaCombo;
 	int textAreaNo = 1;
 	BufferedReader br = null;
 	String[] values;
@@ -101,8 +102,10 @@ public class MetadataBuilder {
 	/**
 	 * Create the application.
 	 */
-	public MetadataBuilder(String path, HashMap<String, JSONObject> recItemMetadata) {
-		initialize(path, recItemMetadata);
+	public MetadataBuilder(String path, 
+			HashMap<String, JSONObject> recItemMetadata, 
+			HashMap<String, HashMap<String, JSONObject>> recDocMetadata) {
+		initialize(path, recItemMetadata, recDocMetadata);
 	}
 
 	// Search through array for relevant metadata name
@@ -137,8 +140,11 @@ public class MetadataBuilder {
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	private void initialize(String path, HashMap<String, JSONObject> recItemMetadata) {
+	private void initialize(String path, 
+			HashMap<String, JSONObject> recItemMetadata, 
+			HashMap<String, HashMap<String, JSONObject>> recDocMetadata) {
 		this.recItemMetadata = recItemMetadata;
+		this.recDocMetadata = recDocMetadata;
 		// Hash map for unknown file extensions
 		fileExtList = new HashMap<String, String>();
 
@@ -154,9 +160,12 @@ public class MetadataBuilder {
 
 		//		ArrayList<JSONObject> finalItemMetadata = new ArrayList<JSONObject>();
 		ArrayList<String> itemNameList = new ArrayList<String>();
+		HashMap<String, ArrayList<String>> docNameMap = new HashMap<String, ArrayList<String>>();
 		//Get sub-directories
 		List<File> subDirs = CollectionUploadGeneral.getDirs(path);
 		for (File subDir: subDirs){
+			HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
+			ArrayList<String> docNameList = new ArrayList<String>();
 			int first = 1;
 			// Set Item name to name of subDirectory
 			String docID = subDir.getName();
@@ -164,24 +173,29 @@ public class MetadataBuilder {
 			//Get all files from sub-directories
 			List<File> filesList = CollectionUploadGeneral.listFiles(subDir.toString());
 			for(File file: filesList){
+				
 				//Need first file metadata for item creation so take from here and mark
 				//if its the first iteration or not
 				float fileBytes = file.length();
 				String docName = file.getName();
+				docNameList.add(docName);
 				String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
 				if (UploadConstants.EXT_MAP.get(fileExt ) == null) {
 					fileExtList.put(fileExt, "Other");
 				}
-				//Populating metadata on ITEM level with first document found
-				//Check if metadata has been initialized previously first
-				if (first == 1 && !recItemMetadata.containsKey(docID+"_doc")){
-					recItemMetadata.put(docID + "_doc", InitializeMetadata.initRec(docID, docName, 
-							fileBytes, fileExt));
+				//Populating metadata on ITEM level 
+				if (!recItemMetadata.containsKey(docID+"_doc")){
 					System.out.println(recItemMetadata);
+					docs.put(docName, InitializeMetadata.initRec(docID, docName, 
+							fileBytes, fileExt));
 					recItemMetadata.put(docID + "_item", InitializeMetadata.initItem(docID));
-					first = 0;
+//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
 				}
 			}
+			if(!recDocMetadata.containsKey(docID)){
+			recDocMetadata.put(docID, docs);
+			}
+			docNameMap.put(docID, docNameList);
 		}
 		System.out.println(fileExtList);
 
@@ -290,22 +304,74 @@ public class MetadataBuilder {
 				// or "comboBoxChanged"
 				//
 				if ("comboBoxChanged".equals(command)) {
-					//Document 
+					//Document
+					DefaultComboBoxModel model = new DefaultComboBoxModel(docNameMap.get(selected.toString()).toArray());
+					docMetaCombo.setModel( model );
+					
 					if (textAreaNo ==2){
-						String tmpStr = recItemMetadata.get(selected + "_doc").toString().
-								replaceAll(",", ",\n");
-						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+//						String tmpStr = recItemMetadata.get(selected + "_doc").toString().
+//								replaceAll(",", ",\n");
+//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
 						//Load into table
-						jsonToTable(recItemMetadata.get(selected + "_doc"));
+						jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
+								get(docMetaCombo.getSelectedItem().toString()));
 						table.repaint();
 
 						//                 System.out.println(recItemMetadata.get(selected).toString());
 					} else if (textAreaNo ==3){
-						String tmpStr = recItemMetadata.get(selected + "_item").toString().
-								replaceAll(",", ",\n");
-						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+//						String tmpStr = recItemMetadata.get(selected + "_item").toString().
+//								replaceAll(",", ",\n");
+//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
 						//Load into table
 						jsonToTable(recItemMetadata.get(selected + "_item"));
+
+						//                 System.out.println(recItemMetadata.get(selected).toString());
+					}
+				}
+			}
+		});
+		
+		// Document metadata combo-box
+		docMetaCombo = new JComboBox(new DefaultComboBoxModel(docNameMap.get(itemMetaCombo.getSelectedItem().toString()).toArray()));
+		docMetaCombo.setBounds(50,400,200,30);
+		docMetaCombo.setVisible(false);
+		
+		docMetaCombo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent event) {
+				JComboBox docMetaCombo = (JComboBox) event.getSource();
+
+				//
+				// Print the selected items and the action command.
+				//
+				Object selected = docMetaCombo.getSelectedItem();
+				System.out.println("Selected Item  = " + selected);
+				String command = event.getActionCommand();
+				System.out.println("Action Command = " + command);
+
+				//
+				// Detect whether the action command is "comboBoxEdited"
+				// or "comboBoxChanged"
+				//
+				if ("comboBoxChanged".equals(command)) {
+					//Document 
+					if (textAreaNo ==2){
+//						String tmpStr = recItemMetadata.get(selected + "_doc").toString().
+//								replaceAll(",", ",\n");
+//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+						//Load into table
+//						jsonToTable(recItemMetadata.get(selected + "_doc"));
+//						table.repaint();
+						jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
+								get(docMetaCombo.getSelectedItem().toString()));
+
+						//                 System.out.println(recItemMetadata.get(selected).toString());
+					} else if (textAreaNo ==3){
+//						String tmpStr = recItemMetadata.get(selected + "_item").toString().
+//								replaceAll(",", ",\n");
+//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+						//Load into table
+//						jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
+//								get(docMetaCombo.getSelectedItem().toString()));
 
 						//                 System.out.println(recItemMetadata.get(selected).toString());
 					}
@@ -335,10 +401,9 @@ public class MetadataBuilder {
 					fileExtList = strtoHash(reqJson.getText());
 					System.out.print(fileExtList);
 				} else if (textAreaNo == 2){
-					recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_doc",
-							getTableData(table));
+					recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
+					put(docMetaCombo.getSelectedItem().toString(), getTableData(table));
 					
-
 				}
 				else if (textAreaNo == 3){
 					recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_item",
@@ -479,6 +544,7 @@ public class MetadataBuilder {
 					scrollBar2.setVisible(false);
 					scrollBar3.setVisible(false);
 					itemMetaCombo.setVisible(false);
+					docMetaCombo.setVisible(false);
 				}
 			}
 
@@ -495,6 +561,7 @@ public class MetadataBuilder {
 					scrollBar2.setVisible(true);
 					scrollBar3.setVisible(false);
 					itemMetaCombo.setVisible(true);
+					docMetaCombo.setVisible(true);
 				}
 			}
 
@@ -511,6 +578,7 @@ public class MetadataBuilder {
 					scrollBar2.setVisible(true);
 					//	                scrollBar3.setVisible(true);
 					itemMetaCombo.setVisible(true);
+					docMetaCombo.setVisible(true);
 				}
 
 			}
@@ -524,6 +592,7 @@ public class MetadataBuilder {
 		frame.getContentPane().add(scrollBar4);
 		frame.getContentPane().add(comboBox);
 		frame.getContentPane().add(itemMetaCombo);
+		frame.getContentPane().add(docMetaCombo);
 		frame.getContentPane().add(textField);
 		frame.getContentPane().add(btnAddMeta);
 		frame.getContentPane().add(btnUpdate);

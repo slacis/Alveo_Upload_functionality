@@ -49,6 +49,7 @@ public class SelectFiles {
 	private JButton btnUpload;
 	private JButton btnCancel;
 	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
+	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
 	private String path = null;
 	private String absolupath;
 	private String filename;
@@ -144,13 +145,14 @@ public class SelectFiles {
 				//Error message : Null Path 
 				JOptionPane.showMessageDialog(null, "Please select path", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
 				} else {
-				MetadataBuilder builder = new MetadataBuilder(path, recItemMetadata);
+				MetadataBuilder builder = new MetadataBuilder(path, recItemMetadata, recDocMetadata);
 				builder.frame.setVisible(true);
 				// Listener to get built Metadata
 				builder.frame.addWindowListener(new WindowAdapter() {
 					  @Override
 					  public void windowClosing(WindowEvent e) {
 						  recItemMetadata = builder.recItemMetadata;
+						  recDocMetadata = builder.recDocMetadata;
 						  System.out.println(recItemMetadata);
 					  }
 					 
