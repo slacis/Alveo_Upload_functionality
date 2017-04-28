@@ -40,7 +40,8 @@ public class CollectionUploadGeneral {
 	
 
 	public static int upload (String path, String key,
-			String collection, HashMap<String, JSONObject> itemMeta) throws IOException{
+			String collection, HashMap<String, JSONObject> itemMeta,
+			HashMap<String, HashMap<String, JSONObject>> docMeta ) throws IOException{
 
 
 		String rcode = upload.CheckCollection.check(collection);

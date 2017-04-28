@@ -65,13 +65,17 @@ public class MetadataBuilder {
 	JFrame frame;
 	private JTextField textField;
 	AutoCompleteDecorator decorator;
+	// Metadata type
 	JRadioButton documentMeta, reqMeta, itemMeta;
+	// Update all/individual
+	JRadioButton radioIndividual, radioAll;
 	JTextArea userJson, reqJson, docJson, upAllJson;
 	private JComboBox comboBox, itemMetaCombo, docMetaCombo;
 	int textAreaNo = 1;
+	int updateAreaNo = 1;
 	BufferedReader br = null;
 	String[] values;
-	JScrollPane scrollBar1, scrollBar2, scrollBar3, scrollBar4, scrollTable1;
+	JScrollPane scrollBar1, scrollBar2, scrollBar3, scrollBar4, scrollTable1, scrollTable2;
 	ArrayList<String> searchedMeta;
 	Map<String, String> fileExtList;
 	//General Metadata
@@ -81,7 +85,9 @@ public class MetadataBuilder {
 	//Table related 
 	private String[] colNames = { "Metadata type", "Metadata" };
 	private DefaultTableModel model = new DefaultTableModel(colNames, 0);
+	private DefaultTableModel modelAll = new DefaultTableModel(colNames, 0);
 	private JTable table = new JTable(model);
+	private JTable tableAll = new JTable(modelAll);
 
 	/**
 	 * Launch the application.
@@ -173,7 +179,7 @@ public class MetadataBuilder {
 			//Get all files from sub-directories
 			List<File> filesList = CollectionUploadGeneral.listFiles(subDir.toString());
 			for(File file: filesList){
-				
+
 				//Need first file metadata for item creation so take from here and mark
 				//if its the first iteration or not
 				float fileBytes = file.length();
@@ -184,19 +190,22 @@ public class MetadataBuilder {
 					fileExtList.put(fileExt, "Other");
 				}
 				//Populating metadata on ITEM level 
-				if (!recItemMetadata.containsKey(docID+"_doc")){
-					System.out.println(recItemMetadata);
-					docs.put(docName, InitializeMetadata.initRec(docID, docName, 
-							fileBytes, fileExt));
+
+				System.out.println(recItemMetadata);
+				docs.put(docName, InitializeMetadata.initRec(docID, docName, 
+						fileBytes, fileExt));
+				if (!recItemMetadata.containsKey(docID + "_item"))
+				{
 					recItemMetadata.put(docID + "_item", InitializeMetadata.initItem(docID));
-//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
+					//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
 				}
 			}
 			if(!recDocMetadata.containsKey(docID)){
-			recDocMetadata.put(docID, docs);
+				recDocMetadata.put(docID, docs);
 			}
 			docNameMap.put(docID, docNameList);
 		}
+
 		System.out.println(fileExtList);
 
 		Font font1 = new Font("SansSerif", Font.BOLD, 12);
@@ -228,6 +237,23 @@ public class MetadataBuilder {
 		operPanel.add(documentMeta);
 		operPanel.add(itemMeta);
 		operPanel.setBounds(50, 100, 200, 150);
+
+		// ButtonGroup for Update Individual Item/Update All
+
+		radioIndividual  = new JRadioButton("Individual");
+		radioAll= new JRadioButton("All");
+
+		ButtonGroup uploadGroup = new ButtonGroup();
+		uploadGroup.add(radioIndividual);
+		uploadGroup.add(radioAll);
+		radioIndividual.setSelected(true);
+
+		JPanel operPanelUpload = new JPanel();
+		Border uploadBorder = BorderFactory.createTitledBorder("Update");
+		operPanelUpload.setBorder(uploadBorder);
+		operPanelUpload.add(radioIndividual);
+		operPanelUpload.add(radioAll);
+		operPanelUpload.setBounds(50, 450, 200, 100);
 
 		// JComboBox for metadata type selection
 		try{
@@ -307,11 +333,11 @@ public class MetadataBuilder {
 					//Document
 					DefaultComboBoxModel model = new DefaultComboBoxModel(docNameMap.get(selected.toString()).toArray());
 					docMetaCombo.setModel( model );
-					
+
 					if (textAreaNo ==2){
-//						String tmpStr = recItemMetadata.get(selected + "_doc").toString().
-//								replaceAll(",", ",\n");
-//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+						//						String tmpStr = recItemMetadata.get(selected + "_doc").toString().
+						//								replaceAll(",", ",\n");
+						//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
 						//Load into table
 						jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
 								get(docMetaCombo.getSelectedItem().toString()));
@@ -319,9 +345,9 @@ public class MetadataBuilder {
 
 						//                 System.out.println(recItemMetadata.get(selected).toString());
 					} else if (textAreaNo ==3){
-//						String tmpStr = recItemMetadata.get(selected + "_item").toString().
-//								replaceAll(",", ",\n");
-//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+						//						String tmpStr = recItemMetadata.get(selected + "_item").toString().
+						//								replaceAll(",", ",\n");
+						//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
 						//Load into table
 						jsonToTable(recItemMetadata.get(selected + "_item"));
 
@@ -330,12 +356,12 @@ public class MetadataBuilder {
 				}
 			}
 		});
-		
+
 		// Document metadata combo-box
 		docMetaCombo = new JComboBox(new DefaultComboBoxModel(docNameMap.get(itemMetaCombo.getSelectedItem().toString()).toArray()));
 		docMetaCombo.setBounds(50,400,200,30);
 		docMetaCombo.setVisible(false);
-		
+
 		docMetaCombo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 				JComboBox docMetaCombo = (JComboBox) event.getSource();
@@ -355,23 +381,23 @@ public class MetadataBuilder {
 				if ("comboBoxChanged".equals(command)) {
 					//Document 
 					if (textAreaNo ==2){
-//						String tmpStr = recItemMetadata.get(selected + "_doc").toString().
-//								replaceAll(",", ",\n");
-//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+						//						String tmpStr = recItemMetadata.get(selected + "_doc").toString().
+						//								replaceAll(",", ",\n");
+						//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
 						//Load into table
-//						jsonToTable(recItemMetadata.get(selected + "_doc"));
-//						table.repaint();
+						//						jsonToTable(recItemMetadata.get(selected + "_doc"));
+						//						table.repaint();
 						jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
 								get(docMetaCombo.getSelectedItem().toString()));
 
 						//                 System.out.println(recItemMetadata.get(selected).toString());
 					} else if (textAreaNo ==3){
-//						String tmpStr = recItemMetadata.get(selected + "_item").toString().
-//								replaceAll(",", ",\n");
-//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
+						//						String tmpStr = recItemMetadata.get(selected + "_item").toString().
+						//								replaceAll(",", ",\n");
+						//						userJson.setText(tmpStr.substring(1, tmpStr.length()-1) + ",\n");
 						//Load into table
-//						jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
-//								get(docMetaCombo.getSelectedItem().toString()));
+						//						jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
+						//								get(docMetaCombo.getSelectedItem().toString()));
 
 						//                 System.out.println(recItemMetadata.get(selected).toString());
 					}
@@ -393,30 +419,66 @@ public class MetadataBuilder {
 		btnAddMeta.setFont(font1);
 		btnAddMeta.setBounds(680, 50, 80, 30);
 
+
 		// Button to update
 		JButton btnUpdate = new JButton("Update");
 		btnUpdate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+
+				String selectedItem = itemMetaCombo.getSelectedItem().toString();
 				if (textAreaNo == 1){
 					fileExtList = strtoHash(reqJson.getText());
 					System.out.print(fileExtList);
-				} else if (textAreaNo == 2){
-					recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
+				} else if (updateAreaNo == 1 && textAreaNo == 2){
+					recDocMetadata.get(selectedItem).
 					put(docMetaCombo.getSelectedItem().toString(), getTableData(table));
-					
+				} else if (updateAreaNo == 2 && textAreaNo == 2){
+					for (String key : recDocMetadata.get(selectedItem).keySet()) {
+						System.out.println("Test key: " + key);
+						JSONObject tempItem = recDocMetadata.get(selectedItem).get(key);
+						recDocMetadata.get(selectedItem).put(key, addTableToJSONObject(tableAll, tempItem));
+					}
+				}else if (updateAreaNo == 1 && textAreaNo == 3){
+					recItemMetadata.put(selectedItem + "_item",
+							getTableData(table));
+				}else if (updateAreaNo == 2 && textAreaNo == 3){
+					for (String key : recItemMetadata.keySet()) {
+						JSONObject tempItem = recItemMetadata.get(key);
+						recItemMetadata.put(key, addTableToJSONObject(tableAll, tempItem));
+					}
+
+
+				}
+			}
+		});
+
+
+		btnUpdate.setFont(font1);
+		btnUpdate.setBounds(700, 500, 80, 30);
+
+
+		// Button to delete selected row
+		JButton btnDelete = new JButton("Delete");
+		btnDelete.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (textAreaNo == 1){
+					//					fileExtList = strtoHash(reqJson.getText());
+					//					System.out.print(fileExtList);
+				} else if (textAreaNo == 2){
+					model.removeRow(table.getSelectedRow());
+
 				}
 				else if (textAreaNo == 3){
-					recItemMetadata.put(itemMetaCombo.getSelectedItem().toString() + "_item",
-							getTableData(table));
+					model.removeRow(table.getSelectedRow());
 
 				}
 
 
 			}
 		});
-		btnUpdate.setFont(font1);
-		btnUpdate.setBounds(700, 500, 80, 30);
 
+		btnDelete.setFont(font1);
+		btnDelete.setBounds(700, 100, 80, 30);
 		// Button to update all
 		JButton btnUpAll = new JButton("All");
 		btnUpAll.addActionListener(new ActionListener() {
@@ -465,10 +527,26 @@ public class MetadataBuilder {
 		lblMetadata.setFont(font1);
 		lblMetadata.setBounds(420, 25, 311, 23);
 
-		//Table for metadata editing
+		//Label for Alveo Item
+		JLabel lblAlveoItem = new JLabel("Alveo Item");
+		lblAlveoItem.setFont(font1);
+		lblAlveoItem.setBounds(50, 270, 311, 23);
+		lblAlveoItem.setVisible(false);
+
+		//Label for Alveo Doc
+		JLabel lblAlveoDocument = new JLabel("Alveo Document");
+		lblAlveoDocument.setFont(font1);
+		lblAlveoDocument.setBounds(50, 370, 311, 23);
+		lblAlveoDocument.setVisible(false);
+
+
+		//Scrollpane for metadata editing
 		scrollTable1 = new JScrollPane(table);
 		scrollTable1.setBounds(300, 100, 400, 250);
 
+		//ScrollPane for adding to all metadata
+		scrollTable2 = new JScrollPane(tableAll);
+		scrollTable2.setBounds(300, 370, 400, 200);
 
 		//TextAreas for Metadata
 
@@ -508,20 +586,17 @@ public class MetadataBuilder {
 		btnAddMeta.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (textAreaNo == 1) {
-					//				reqJson.append("\"" + comboBox.getSelectedItem().toString() +
-					//						"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
-					//				System.out.println(reqJson.getText());
-					//				JSONObject jsonObj = JSONObject.fromObject("{" + reqJson.getText() + "}");
-					//				System.out.println(jsonObj);
-				} else if (textAreaNo == 2 || textAreaNo == 3) {
-//					String tmpStr = userJson.getText();
-//					userJson.append("\"" + comboBox.getSelectedItem().toString() +
-//							"\"" + ":" + " \"" + textField.getText().toString() + "\",\n");
+
+				} else if (updateAreaNo == 1 && (textAreaNo == 2 || textAreaNo == 3)) {
 					String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
 					model.addRow(array);
 					getTableData(table);
 
-				} 		
+				} 	else if (updateAreaNo == 2 && (textAreaNo == 2 || textAreaNo == 3)) {
+					String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
+					modelAll.addRow(array);
+					getTableData(table);
+				}
 
 			}	
 
@@ -540,6 +615,8 @@ public class MetadataBuilder {
 				// TODO Auto-generated method stub
 				if(reqMeta.isSelected()) {
 					textAreaNo = 1;
+					lblAlveoDocument.setVisible(false);
+					lblAlveoItem.setVisible(false);
 					scrollBar1.setVisible(true);
 					scrollBar2.setVisible(false);
 					scrollBar3.setVisible(false);
@@ -557,6 +634,8 @@ public class MetadataBuilder {
 				// TODO Auto-generated method stub
 				if(documentMeta.isSelected()) {
 					textAreaNo = 2;
+					lblAlveoDocument.setVisible(true);
+					lblAlveoItem.setVisible(true);
 					scrollBar1.setVisible(false);
 					scrollBar2.setVisible(true);
 					scrollBar3.setVisible(false);
@@ -573,6 +652,8 @@ public class MetadataBuilder {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				if(itemMeta.isSelected()) {
+					lblAlveoDocument.setVisible(true);
+					lblAlveoItem.setVisible(true);
 					textAreaNo = 3;
 					scrollBar1.setVisible(false);
 					scrollBar2.setVisible(true);
@@ -585,27 +666,56 @@ public class MetadataBuilder {
 
 		});
 
+		radioIndividual.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(radioIndividual.isSelected()) {
+					updateAreaNo = 1;
+				}
+			}
+
+		});
+
+		radioAll.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(radioAll.isSelected()) {
+					updateAreaNo = 2;
+				}
+			}
+
+		});
+
 
 		frame.getContentPane().add(scrollTable1);
+		frame.getContentPane().add(scrollTable2);
 		frame.getContentPane().add(scrollBar2);
 		frame.getContentPane().add(scrollBar3);
-		frame.getContentPane().add(scrollBar4);
+		//		frame.getContentPane().add(scrollBar4);
 		frame.getContentPane().add(comboBox);
 		frame.getContentPane().add(itemMetaCombo);
 		frame.getContentPane().add(docMetaCombo);
 		frame.getContentPane().add(textField);
 		frame.getContentPane().add(btnAddMeta);
+		frame.getContentPane().add(btnDelete);
 		frame.getContentPane().add(btnUpdate);
 		frame.getContentPane().add(btnUpAll);
 		frame.getContentPane().add(btnSearch);
 		frame.getContentPane().add(lblMetadataT);
 		frame.getContentPane().add(lblMetadata);
+		frame.getContentPane().add(lblAlveoDocument);
+		frame.getContentPane().add(lblAlveoItem);
 		frame.getContentPane().add(operPanel);
+		frame.getContentPane().add(operPanelUpload);
 		frame.setVisible(true);
 	}
-	
+
 	//Table related auxillary functions
-	
+
 	// Get data from table to array 
 	//REWRITE THIS CODE
 	public JSONObject getTableData (JTable table) {
@@ -618,6 +728,21 @@ public class MetadataBuilder {
 		}
 		System.out.println(dataFromTable.toString());
 		return dataFromTable;
+
+
+	}
+
+	// Get data from table, add to previous array
+	//REWRITE THIS CODE
+	public JSONObject addTableToJSONObject (JTable table, JSONObject prevJSON) {
+		DefaultTableModel dtm = (DefaultTableModel) table.getModel();
+		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
+		//	    Object[][] tableData = new Object[nRow][nCol];
+		for (int i = 0 ; i < nRow ; i++){
+			prevJSON.element((String)dtm.getValueAt(i,0), (String)dtm.getValueAt(i,1));
+		}
+		System.out.println(prevJSON.toString());
+		return prevJSON;
 
 
 	}

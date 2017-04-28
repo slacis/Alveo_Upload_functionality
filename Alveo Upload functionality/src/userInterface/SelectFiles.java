@@ -206,7 +206,7 @@ public class SelectFiles {
 						}
 						//For general collection
 						else if (f.isDirectory()) {
-							CollectionUploadGeneral.upload(path, key, collection, recItemMetadata);
+							CollectionUploadGeneral.upload(path, key, collection, recItemMetadata, recDocMetadata);
 							
 						}
 						//For Common files
