@@ -13,7 +13,7 @@ import net.sf.json.JSONObject;
 
 public class MetadataGeneral {
 	
-	public static JSONArray createMetadata(String docID, String docName, float txtFileBytes, String fileExs, JSONObject ausnc_doc_v, JSONObject graph_v){
+	public static JSONArray createMetadata(JSONObject graph_v){
 
 		
 		JSONArray docsMetadata = new JSONArray();			
@@ -53,7 +53,7 @@ public class MetadataGeneral {
 //		ausnc_doc_v.element("dcterms:type" , "Other");
 //		}
 					
-		ausnc_doc.add(ausnc_doc_v.toString());
+//		ausnc_doc.add(ausnc_doc_v.toString());
 //		graph_v.element("ausnc:document", ausnc_doc.toString());			
 //		graph_v.element("dcterms:identifier" , docID);//
 //		hcsvlab_display.element("@id" , docID + "#Text");

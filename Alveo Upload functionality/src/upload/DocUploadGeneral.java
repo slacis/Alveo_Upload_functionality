@@ -28,7 +28,7 @@ public class DocUploadGeneral {
 	
 	private static final Logger LOGGER = Logger.getLogger( DocUploadGeneral.class.getName() );
 	
-	public static void docsUpload(String path, String docID, String itemID, float xmlFileBytes, String fileExs, String key, String collection) throws IOException {
+	public static void docsUpload(String path, String docID, String itemID, String key, String collection, JSONObject jsonParam) throws IOException {
 		// TODO Auto-generated method stub
 			
 		HttpClient httpclient = new HttpClient();
@@ -43,25 +43,26 @@ public class DocUploadGeneral {
 			
 		    PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL + collection + "/" + itemID);
 			    
-		    JSONObject jsonParam = new JSONObject();
+//		    JSONObject jsonParam = new JSONObject();
 		    JSONObject context = new JSONObject(); 
 	
 		    context.put("dcterms", "http://purl.org/dc/terms/");
 		    context.put("foaf", "http://xmlns.com/foaf/0.1/");
 	
 	        jsonParam.put("@context", context.toString());
-	        jsonParam.put("@id", docID );
-	        jsonParam.put("@type","foaf:Document" );
-	        jsonParam.put("dcterms:identifier", docID);
-	        jsonParam.put("dcterms:title", docID  );
+//	        jsonParam.put("@id", docID );
+//	        jsonParam.put("@type","foaf:Document" );
+//	        jsonParam.put("dcterms:identifier", docID);
+//	        jsonParam.put("dcterms:title", docID  );
+		    
 	     // Check Extension
-			String value = UploadConstants.EXT_MAP.get("."+fileExs);
-			if (value != null) {
-				 jsonParam.put("dcterms:type", value);
-			} else {
-				 jsonParam.put("dcterms:type", "Other");
-			}
-	        jsonParam.put("dcterms:extent",  xmlFileBytes);
+//			String value = UploadConstants.EXT_MAP.get("."+fileExs);
+//			if (value != null) {
+//				 jsonParam.put("dcterms:type", value);
+//			} else {
+//				 jsonParam.put("dcterms:type", "Other");
+//			}
+//	        jsonParam.put("dcterms:extent",  xmlFileBytes);
 		    
 		    Part[] parts = {new FilePart( "file", file ), new StringPart( "metadata",jsonParam.toString()) };
 		    

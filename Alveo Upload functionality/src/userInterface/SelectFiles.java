@@ -31,6 +31,7 @@ import org.apache.commons.io.FilenameUtils;
 import mapping.BioC2Alveo;
 import mapping.BioC2Json;
 import net.sf.json.JSONObject;
+import upload.CollectionUploadFinal;
 import upload.CollectionUploadGeneral;
 import upload.Metadata;
 import upload.UploadConstants;
@@ -206,7 +207,7 @@ public class SelectFiles {
 						}
 						//For general collection
 						else if (f.isDirectory()) {
-							CollectionUploadGeneral.upload(path, key, collection, recItemMetadata, recDocMetadata);
+							CollectionUploadFinal.upload(path, key, collection, recItemMetadata, recDocMetadata);
 							
 						}
 						//For Common files
