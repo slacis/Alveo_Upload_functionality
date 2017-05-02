@@ -13,6 +13,8 @@ import javax.swing.JFileChooser;
 
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
+import jdk.internal.org.objectweb.asm.tree.analysis.Value;
+
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -590,12 +592,12 @@ public class MetadataBuilder {
 				} else if (updateAreaNo == 1 && (textAreaNo == 2 || textAreaNo == 3)) {
 					String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
 					model.addRow(array);
-					getTableData(table);
+//					getTableData(table);
 
 				} 	else if (updateAreaNo == 2 && (textAreaNo == 2 || textAreaNo == 3)) {
 					String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
 					modelAll.addRow(array);
-					getTableData(table);
+//					getTableData(table);
 				}
 
 			}	
@@ -716,15 +718,24 @@ public class MetadataBuilder {
 
 	//Table related auxillary functions
 
-	// Get data from table to array 
+	// Get data from table to JSONObject
 	//REWRITE THIS CODE
 	public JSONObject getTableData (JTable table) {
 		JSONObject dataFromTable = new JSONObject();
 		DefaultTableModel dtm = (DefaultTableModel) table.getModel();
 		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
+		int i = 0;
 		//	    Object[][] tableData = new Object[nRow][nCol];
-		for (int i = 0 ; i < nRow ; i++){
-			dataFromTable.element((String)dtm.getValueAt(i,0), (String)dtm.getValueAt(i,1));
+		for (; i < nRow ; i++){
+			//For multi-layered json
+				if (i+1 < nRow && Character.toLowerCase(dtm.getValueAt(i+1,0).toString().charAt(0)) == '-'  ){
+				JSONObject innerJSON = getTableDataMulti(dtm, i+1);
+				dataFromTable.element((String)dtm.getValueAt(i,0), innerJSON);
+				i = i + innerJSON.size();
+			}
+			else {
+				dataFromTable.element((String)dtm.getValueAt(i,0), (String)dtm.getValueAt(i,1));
+			}
 		}
 		System.out.println(dataFromTable.toString());
 		return dataFromTable;
@@ -732,20 +743,46 @@ public class MetadataBuilder {
 
 	}
 
-	// Get data from table, add to previous array
-	//REWRITE THIS CODE
+	// Get data from table, add to previous JSONObject
+	// Unlike other function this ADDS to a pre-existing object
 	public JSONObject addTableToJSONObject (JTable table, JSONObject prevJSON) {
 		DefaultTableModel dtm = (DefaultTableModel) table.getModel();
 		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
+		int i = 0 ;
 		//	    Object[][] tableData = new Object[nRow][nCol];
-		for (int i = 0 ; i < nRow ; i++){
-			prevJSON.element((String)dtm.getValueAt(i,0), (String)dtm.getValueAt(i,1));
+		for (; i < nRow ; i++){
+			if (i+1 < nRow && Character.toLowerCase(dtm.getValueAt(i+1,0).toString().charAt(0)) == '-'  ){
+				System.out.println("i before: " + i);
+				JSONObject innerJSON = getTableDataMulti(dtm, i+1);
+				prevJSON.element((String)dtm.getValueAt(i,0), innerJSON);
+				i = i + innerJSON.size();
+			} else {
+				prevJSON.element((String)dtm.getValueAt(i,0), (String)dtm.getValueAt(i,1));
+			}
 		}
 		System.out.println(prevJSON.toString());
 		return prevJSON;
 
-
 	}
+
+	//Helper function for tableToJSON
+	//Inner JSON details
+	public JSONObject getTableDataMulti (DefaultTableModel dtm, int i) {
+		JSONObject tmpJSON =  new JSONObject();
+		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
+		//	    Object[][] tableData = new Object[nRow][nCol];
+		for ( ; i < nRow ; i++){
+			//For multi-layered json
+			if (Character.toLowerCase(dtm.getValueAt(i,0).toString().charAt(0)) == '-' ){
+				tmpJSON.element(dtm.getValueAt(i,0).toString().substring(1), (String)dtm.getValueAt(i,1));
+			} else {
+				break;
+			}
+		}
+		return tmpJSON;
+	}
+
+	// Converts JSONObject to JTable
 	public void jsonToTable (JSONObject tableData) {
 		clearTable();
 		for (Object key : tableData.keySet()) {
@@ -753,11 +790,24 @@ public class MetadataBuilder {
 			String keyN = (String) key;
 			System.out.println(keyN);
 			System.out.println(tableData.get(keyN));
-			String value = tableData.get(keyN).toString();
-			String[] array = {keyN, value};
-			model.addRow(array);	
+			Object value = tableData.get(keyN);
+			// For inner JSONObject
+			if (value instanceof JSONObject) {
+				String[] JSONCont = {keyN,""};
+				model.addRow(JSONCont);
+				System.out.println("value is json!!!!");
+				for (Object keyI : ((JSONObject) value).keySet()) {
+					String valueI = ((JSONObject) value).get(keyI).toString();
+					String[] array = {"-" + keyI.toString(), valueI};
+					model.addRow(array);
+				}	
+			} else {
+				String[] array = {keyN, value.toString()};
+				model.addRow(array);	
+			}
 		}
 	}
+	
 	public void clearTable(){
 		int rowCount = model.getRowCount();
 		for (int i = rowCount - 1; i >= 0; i--) {
