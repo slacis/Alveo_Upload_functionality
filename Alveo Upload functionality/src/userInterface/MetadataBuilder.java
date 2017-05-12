@@ -19,6 +19,9 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -90,6 +93,7 @@ public class MetadataBuilder {
 	private DefaultTableModel modelAll = new DefaultTableModel(colNames, 0);
 	private JTable table = new JTable(model);
 	private JTable tableAll = new JTable(modelAll);
+	JSONObject collectionMetadata = new JSONObject();
 
 	/**
 	 * Launch the application.
@@ -110,10 +114,9 @@ public class MetadataBuilder {
 	/**
 	 * Create the application.
 	 */
-	public MetadataBuilder(String path, 
-			HashMap<String, JSONObject> recItemMetadata, 
-			HashMap<String, HashMap<String, JSONObject>> recDocMetadata) {
-		initialize(path, recItemMetadata, recDocMetadata);
+	public MetadataBuilder(String path, String collectionName, String key, 
+			Boolean newItem, Boolean itemMD, Boolean collectionMD) {
+		initialize(path, collectionName, key, recItemMetadata, recDocMetadata, newItem, itemMD, collectionMD);
 	}
 
 	// Search through array for relevant metadata name
@@ -149,10 +152,26 @@ public class MetadataBuilder {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize(String path, 
+			String collectionName,
+			String key,
 			HashMap<String, JSONObject> recItemMetadata, 
-			HashMap<String, HashMap<String, JSONObject>> recDocMetadata) {
+			HashMap<String, HashMap<String, JSONObject>> recDocMetadata,
+			Boolean newItem,
+			Boolean itemMD,
+			Boolean collectionMD) {
 		this.recItemMetadata = recItemMetadata;
 		this.recDocMetadata = recDocMetadata;
+		System.out.println(collectionMD);
+		
+		// Get collection metadata
+		if (collectionMD == true) {
+			try{
+				collectionMetadata = requestToAlveo(key, UploadConstants.CATALOG_URL + collectionName);
+			} catch (IOException e) {
+
+			}
+
+		}
 		// Hash map for unknown file extensions
 		fileExtList = new HashMap<String, String>();
 
@@ -224,20 +243,71 @@ public class MetadataBuilder {
 
 		documentMeta  = new JRadioButton("Document Metadata");
 		reqMeta  = new JRadioButton("File Extensions");
-		itemMeta  = new JRadioButton("Item Metadata");
 
 		ButtonGroup operation = new ButtonGroup();
 		operation.add(reqMeta);
 		operation.add(documentMeta);
-		operation.add(itemMeta);
 		reqMeta.setSelected(true);
 
 		JPanel operPanel = new JPanel();
 		Border operBorder = BorderFactory.createTitledBorder("Operation");
 		operPanel.setBorder(operBorder);
 		operPanel.add(reqMeta);
-		operPanel.add(documentMeta);
+
+		JRadioButton rdbtnCollectionMetadata = new JRadioButton("Collection Metadata");
+		operPanel.add(rdbtnCollectionMetadata);
+		operation.add(rdbtnCollectionMetadata);
+		rdbtnCollectionMetadata.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(rdbtnCollectionMetadata.isSelected()) {
+					jsonToTable(JSONObject.fromObject(collectionMetadata.get("metadata")));
+					table.repaint();
+				}
+
+			}
+
+		});
+
+		itemMeta  = new JRadioButton("Item Metadata");
+		operation.add(itemMeta);
 		operPanel.add(itemMeta);
+
+
+		//Label for Alveo Item
+		JLabel lblAlveoItem = new JLabel("Alveo Item");
+		lblAlveoItem.setFont(font1);
+		lblAlveoItem.setBounds(50, 270, 311, 23);
+		lblAlveoItem.setVisible(false);
+
+		//Label for Alveo Doc
+		JLabel lblAlveoDocument = new JLabel("Alveo Document");
+		lblAlveoDocument.setFont(font1);
+		lblAlveoDocument.setBounds(50, 370, 311, 23);
+		lblAlveoDocument.setVisible(false);
+
+		itemMeta.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(itemMeta.isSelected()) {
+					lblAlveoDocument.setVisible(true);
+					lblAlveoItem.setVisible(true);
+					textAreaNo = 3;
+					scrollBar1.setVisible(false);
+					scrollBar2.setVisible(true);
+					//	                scrollBar3.setVisible(true);
+					itemMetaCombo.setVisible(true);
+					docMetaCombo.setVisible(true);
+				}
+
+			}
+
+		});
+		operPanel.add(documentMeta);
 		operPanel.setBounds(50, 100, 200, 150);
 
 		// ButtonGroup for Update Individual Item/Update All
@@ -529,18 +599,6 @@ public class MetadataBuilder {
 		lblMetadata.setFont(font1);
 		lblMetadata.setBounds(420, 25, 311, 23);
 
-		//Label for Alveo Item
-		JLabel lblAlveoItem = new JLabel("Alveo Item");
-		lblAlveoItem.setFont(font1);
-		lblAlveoItem.setBounds(50, 270, 311, 23);
-		lblAlveoItem.setVisible(false);
-
-		//Label for Alveo Doc
-		JLabel lblAlveoDocument = new JLabel("Alveo Document");
-		lblAlveoDocument.setFont(font1);
-		lblAlveoDocument.setBounds(50, 370, 311, 23);
-		lblAlveoDocument.setVisible(false);
-
 
 		//Scrollpane for metadata editing
 		scrollTable1 = new JScrollPane(table);
@@ -592,12 +650,12 @@ public class MetadataBuilder {
 				} else if (updateAreaNo == 1 && (textAreaNo == 2 || textAreaNo == 3)) {
 					String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
 					model.addRow(array);
-//					getTableData(table);
+					//					getTableData(table);
 
 				} 	else if (updateAreaNo == 2 && (textAreaNo == 2 || textAreaNo == 3)) {
 					String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
 					modelAll.addRow(array);
-//					getTableData(table);
+					//					getTableData(table);
 				}
 
 			}	
@@ -644,26 +702,6 @@ public class MetadataBuilder {
 					itemMetaCombo.setVisible(true);
 					docMetaCombo.setVisible(true);
 				}
-			}
-
-		});
-
-		itemMeta.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				if(itemMeta.isSelected()) {
-					lblAlveoDocument.setVisible(true);
-					lblAlveoItem.setVisible(true);
-					textAreaNo = 3;
-					scrollBar1.setVisible(false);
-					scrollBar2.setVisible(true);
-					//	                scrollBar3.setVisible(true);
-					itemMetaCombo.setVisible(true);
-					docMetaCombo.setVisible(true);
-				}
-
 			}
 
 		});
@@ -728,7 +766,7 @@ public class MetadataBuilder {
 		//	    Object[][] tableData = new Object[nRow][nCol];
 		for (; i < nRow ; i++){
 			//For multi-layered json
-				if (i+1 < nRow && Character.toLowerCase(dtm.getValueAt(i+1,0).toString().charAt(0)) == '-'  ){
+			if (i+1 < nRow && Character.toLowerCase(dtm.getValueAt(i+1,0).toString().charAt(0)) == '-'  ){
 				JSONObject innerJSON = getTableDataMulti(dtm, i+1);
 				dataFromTable.element((String)dtm.getValueAt(i,0), innerJSON);
 				i = i + innerJSON.size();
@@ -807,11 +845,72 @@ public class MetadataBuilder {
 			}
 		}
 	}
-	
+
 	public void clearTable(){
 		int rowCount = model.getRowCount();
 		for (int i = rowCount - 1; i >= 0; i--) {
 			model.removeRow(i);
 		}
+	}
+
+
+	// Get metadata from Items
+	public void getItemMeta(String collectionName, String key) {
+		try {
+			JSONObject itemMetadata = requestToAlveo(key, UploadConstants.CATALOG_URL+ "search?metadata=collection_name:" + collectionName);
+			String itemNamestemp1 = itemMetadata.get("items").toString();
+			String itemNamestemp2 = itemNamestemp1.substring(1, itemNamestemp1.length() - 1);
+			List<String> itemNames = Arrays.asList(itemNamestemp2.split(","));
+			for (String temp : itemNames) {
+				JSONObject request = requestToAlveo(key, temp.substring(1, temp.length()-1));
+				JSONObject temp1 = (JSONObject) request.get("alveo:metadata");
+				recItemMetadata.put(temp1.get("dc:identifier").toString(), temp1);
+				System.out.println(temp1.get("dc:identifier").toString());
+				System.out.println(temp1);
+			}
+			System.out.println(recItemMetadata.toString());
+
+
+
+
+
+			//		return response;
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	// make JSON request to Alveo server
+	public JSONObject requestToAlveo(String key, String appendToUrl) throws IOException {
+		JSONObject tmpJSON =  new JSONObject();
+		String serviceURL =	appendToUrl;
+		URL myURL = new URL(serviceURL);
+		HttpURLConnection conn = (HttpURLConnection)myURL.openConnection();
+		conn.setRequestMethod("GET");
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("X-API-KEY", key);
+		conn.setRequestProperty("Accept", "application/json");
+		conn.setUseCaches(false);
+		conn.setDoInput(true);
+		conn.setDoOutput(true);
+		conn.connect();
+		JSONObject metadata = readResponse(conn);
+		return metadata;
+	}
+
+
+	public JSONObject readResponse(HttpURLConnection conn) throws IOException {
+		BufferedReader in = new BufferedReader(
+				new InputStreamReader(conn.getInputStream()));
+		String output;
+		StringBuffer response = new StringBuffer();
+		while ((output = in.readLine()) != null) {
+			response.append(output);
+		}
+		in.close();
+		System.out.println(response.toString());
+		JSONObject JSONresponse = JSONObject.fromObject(response.toString());
+		System.out.println(JSONresponse.toString());
+		return JSONresponse;
 	}
 }

@@ -76,34 +76,24 @@ public class SelectFiles {
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 		
-		JLabel lblMetadata_1 = new JLabel("Metadata:");
-		lblMetadata_1.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lblMetadata_1.setBounds(28, 221, 76, 30);
-		frame.getContentPane().add(lblMetadata_1);
-		
 		JLabel lblNewLabel = new JLabel("File Path:");
 		lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lblNewLabel.setBounds(28, 69, 60, 27);
+		lblNewLabel.setBounds(137, 66, 89, 27);
 		frame.getContentPane().add(lblNewLabel);
 		
 		Filechooser = new JTextField();
-		Filechooser.setBounds(100, 68, 200, 30);
+		Filechooser.setBounds(204, 65, 200, 30);
 		frame.getContentPane().add(Filechooser);
 		Filechooser.setColumns(10);
 		
-		JEditorPane dtrpnJson = new JEditorPane();
-		dtrpnJson.setText("Metadata as JSON-LD");
-		dtrpnJson.setBounds(100, 167, 200, 159);
-		frame.getContentPane().add(dtrpnJson);
-		
 		textField = new JTextField();
-		textField.setBounds(100, 115, 200, 30);
+		textField.setBounds(204, 112, 200, 30);
 		frame.getContentPane().add(textField);
 		textField.setColumns(10);
 		
 		JLabel lblNewLabel_1 = new JLabel("Collection:");
 		lblNewLabel_1.setFont(new Font("Tahoma", Font.PLAIN, 14));
-		lblNewLabel_1.setBounds(28, 123, 76, 22);
+		lblNewLabel_1.setBounds(132, 120, 76, 22);
 		frame.getContentPane().add(lblNewLabel_1);
 		
 		JButton btnAdd = new JButton("Add");
@@ -135,7 +125,7 @@ public class SelectFiles {
 	            }
 			}
 		});
-		btnAdd.setBounds(317, 72, 70, 23);
+		btnAdd.setBounds(421, 69, 70, 23);
 		frame.getContentPane().add(btnAdd);
 		
 		// Open Metadata Editor button
@@ -162,7 +152,7 @@ public class SelectFiles {
 	
 			}
 		});
-		btnMetadata.setBounds(317, 100, 110, 23);
+		btnMetadata.setBounds(421, 97, 110, 23);
 		frame.getContentPane().add(btnMetadata);
 		
 		btnUpload = new JButton("Upload");
@@ -188,7 +178,7 @@ public class SelectFiles {
 							 BioC2Alveo.writeAlveoFiles(path);
 							 //To generate annotation file
 							 List<String> docIDs = BioC2Json.writeJson(path,filename, collection);					
-							 String metadata = dtrpnJson.getText();
+							 String metadata = "";
 							
 							 //To upload above files to Alveo server
 							 int result = upload.CollectionUpload.upload(absolupath,docIDs,key,collection, metadata);
@@ -258,7 +248,6 @@ public class SelectFiles {
 		JButton btnNewButton = new JButton("Clear");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				dtrpnJson.setText(null);
 			}
 		});
 		btnNewButton.setBounds(317, 255, 71, 25);

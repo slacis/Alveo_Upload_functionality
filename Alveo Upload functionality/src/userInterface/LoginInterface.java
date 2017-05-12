@@ -60,7 +60,8 @@ public class LoginInterface {
 //					response = testApiKey(apiKey);
 					// Check API key from config and login if valid (set to 200)
 					if(Integer.valueOf(response) == 0){
-						SelectFiles window = new SelectFiles(apiKey);
+//						SelectFiles window = new SelectFiles(apiKey);
+						WindowCollection window = new WindowCollection(apiKey);
 						window.frame.setVisible(true);
 					} else {
 					LoginInterface window = new LoginInterface();
