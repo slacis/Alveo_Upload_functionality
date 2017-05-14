@@ -15,12 +15,13 @@ import net.sf.json.JSONObject;
  */
 public class InitializeMetadata {
 
-	public JSONObject initContext() {
+	public static JSONObject initContext() {
 		// Default context metadata
 		JSONObject context = new JSONObject();
 		context.element("ausnc", "http://ns.ausnc.org.au/schemas/ausnc_md_model/");
 		context.element("corpus", "http://ns.ausnc.org.au/corpora/");
 		context.element("dc", "http://purl.org/dc/terms/");
+		context.element("dcmitype", "http://purl.org/dc/dcmitype/");
 		context.element("dcterms", "http://purl.org/dc/terms/");
 		context.element("foaf", "http://xmlns.com/foaf/0.1/");
 		context.element("hcsvlab", "http://hcsvlab.org/vocabulary/");
@@ -58,6 +59,18 @@ public class InitializeMetadata {
 		graph_v.element("dcterms:identifier" , docID);
 		return graph_v;
 	}
+	
+	public static JSONObject initCollection() {
+		JSONObject crCollectionMetadata = new JSONObject();
+		crCollectionMetadata.element("@context", initContext());
+		crCollectionMetadata.element("@type", "dcmitype:Collection");
+		crCollectionMetadata.element("dc:creator","Data Owner");
+		crCollectionMetadata.element("dc:rights", "All rights reserved to Data Owner");
+		crCollectionMetadata.element("dc:subject", "English Language");
+		crCollectionMetadata.element("dc:title", "Test");
+		return crCollectionMetadata;
+		}
+	
 	
 	
 

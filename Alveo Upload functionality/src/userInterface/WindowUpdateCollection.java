@@ -158,8 +158,9 @@ public class WindowUpdateCollection {
 				//Error message : Null Path 
 				JOptionPane.showMessageDialog(null, "Please select path", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
 				} else {
-				String collectionName = textField_1.getText();
-				MetadataBuilder builder = new MetadataBuilder(path, collectionName, key, newItem, itemMD, collectionMD);
+				HashMap<String, String> collectionDetails = new HashMap<String,String>();
+						collectionDetails.put("collectionName",textField_1.getText());
+				MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false);
 				builder.frame.setVisible(true);
 
 				}

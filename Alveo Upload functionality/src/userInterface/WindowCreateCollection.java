@@ -15,6 +15,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
@@ -42,6 +43,7 @@ public class WindowCreateCollection {
 	private JTextField textField_1;
 	private JTextField textField;
 	HashMap<String, Integer> licenseList = new HashMap<String, Integer>();
+	String privateField;
 
 
 
@@ -77,12 +79,35 @@ public class WindowCreateCollection {
 		licenseList.put("Creative Commons v3.0 BY",10);
 		licenseList.put("Creative Commons v3.0 BY-NC-SA",11);
 		licenseList.put("PARADISEC Conditions of Access",12);
+		privateField = "true";
 
 
 
 		JRadioButton publicCollection, privateCollection;
 		publicCollection  = new JRadioButton("Public Collection");
+		publicCollection.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(publicCollection.isSelected()) {
+					privateField = "false";
+				}
+
+			}
+		});
 		privateCollection  = new JRadioButton("Private Collection");
+		privateCollection.addActionListener(new ActionListener() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			if(privateCollection.isSelected()) {
+				privateField = "true";
+			}
+
+		}
+		});
+		
 		ButtonGroup operation = new ButtonGroup();
 		operation.add(privateCollection);
 		operation.add(publicCollection);
@@ -95,9 +120,31 @@ public class WindowCreateCollection {
 		operPanel.add(publicCollection);
 		operPanel.setBounds(77, 194, 200, 96);
 		frame.getContentPane().add(operPanel);
+		
+		JComboBox comboBox = new JComboBox(new DefaultComboBoxModel(licenseList.keySet().toArray()));
+		comboBox.setBounds(180, 58, 183, 29);
+		frame.getContentPane().add(comboBox);
 
 		JButton btnCreateNewCollection = new JButton("Create New Collection");
 		btnCreateNewCollection.setBounds(64, 302, 262, 36);
+		btnCreateNewCollection.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (path == null){
+				//Error message : Null Path 
+				JOptionPane.showMessageDialog(null, "Please select path", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+				} else {
+				HashMap<String, String> collectionDetails = new HashMap<String,String>();
+						collectionDetails.put("collectionName",textField_1.getText());
+						collectionDetails.put("metadataField",textField.getText());
+						collectionDetails.put("private", privateField);
+						collectionDetails.put("license", licenseList.get(comboBox.getSelectedItem()).toString());
+				MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, true, false, false, true);
+				builder.frame.setVisible(true);
+
+				}
+	
+			}
+		});
 		frame.getContentPane().add(btnCreateNewCollection);
 
 		JLabel lblLicense = new JLabel("License");
@@ -112,10 +159,6 @@ public class WindowCreateCollection {
 		JLabel lblCollectionName = new JLabel("Collection Name");
 		lblCollectionName.setBounds(41, 38, 130, 15);
 		frame.getContentPane().add(lblCollectionName);
-
-		JComboBox comboBox = new JComboBox(new DefaultComboBoxModel(licenseList.keySet().toArray()));
-		comboBox.setBounds(180, 58, 183, 29);
-		frame.getContentPane().add(comboBox);
 
 
 		JTextField Filechooser = new JTextField();
