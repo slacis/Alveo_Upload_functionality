@@ -29,6 +29,11 @@ import javax.swing.border.Border;
 
 import net.sf.json.JSONObject;
 import upload.UploadConstants;
+import javax.swing.border.TitledBorder;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.methods.DeleteMethod;
 
 /** Window for creating new collection
  * 
@@ -46,7 +51,7 @@ public class WindowUpdateCollection {
 	private String absolupath;
 	private String filename;
 	private JTextField textField_1;
-	private Boolean collectionMD, itemMD, newItem;
+	private Boolean collectionMD, itemMD, newItem, itemDeleteBool;
 
 
 	/**
@@ -55,7 +60,7 @@ public class WindowUpdateCollection {
 	 */
 	public WindowUpdateCollection(String key) {		
 		initialize(key);
-//		getItemMeta("uploadertest2", key);
+		//		getItemMeta("uploadertest2", key);
 	}
 
 	/**
@@ -107,6 +112,8 @@ public class WindowUpdateCollection {
 
 		JRadioButton addnewYes, addnewNo;
 		addnewYes  = new JRadioButton("Yes");
+		addnewYes.setSelected(true);
+		newItem = true;
 		addnewYes.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -134,7 +141,7 @@ public class WindowUpdateCollection {
 
 			}
 		});
-		addnewNo.setSelected(true);
+		
 		ButtonGroup operation = new ButtonGroup();
 		operation.add(addnewNo);
 		operation.add(addnewYes);
@@ -155,16 +162,19 @@ public class WindowUpdateCollection {
 		btnCreateNewCollection.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (path == null && newItem == true){
-				//Error message : Null Path 
-				JOptionPane.showMessageDialog(null, "Please select path", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+					//Error message : Null Path 
+					JOptionPane.showMessageDialog(null, "Please select path", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
 				} else {
-				HashMap<String, String> collectionDetails = new HashMap<String,String>();
-						collectionDetails.put("collectionName",textField_1.getText());
-				MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false);
-				builder.frame.setVisible(true);
+					if (itemDeleteBool){
+						deleteItems(key, textField_1.getText());
+					}
+					HashMap<String, String> collectionDetails = new HashMap<String,String>();
+					collectionDetails.put("collectionName",textField_1.getText());
+					MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false);
+					builder.frame.setVisible(true);
 
 				}
-	
+
 			}
 		});
 		frame.getContentPane().add(btnCreateNewCollection);
@@ -187,9 +197,8 @@ public class WindowUpdateCollection {
 		//		collectionMDPanel.setBorder(null);
 		collectionMDPanel.setBounds(9, 70, 177, 38);
 		frame.getContentPane().add(collectionMDPanel);
-
+		
 		JRadioButton radioButtonYes = new JRadioButton("Yes");
-		radioButtonYes.setSelected(true);
 		radioButtonYes.addActionListener(new ActionListener() {
 
 			@Override
@@ -203,9 +212,11 @@ public class WindowUpdateCollection {
 		});
 		collectionMDPanel.add(radioButtonYes);
 
-		
+
 
 		JRadioButton radioButtonNo = new JRadioButton("No");
+		radioButtonNo.setSelected(true);
+		collectionMD = false;
 		radioButtonNo.addActionListener(new ActionListener() {
 
 			@Override
@@ -229,7 +240,6 @@ public class WindowUpdateCollection {
 		frame.getContentPane().add(itemMDPanel);
 
 		JRadioButton radioButtonYesItem = new JRadioButton("Yes");
-		radioButtonYesItem.setSelected(true);
 		radioButtonYesItem.addActionListener(new ActionListener() {
 
 			@Override
@@ -244,6 +254,8 @@ public class WindowUpdateCollection {
 		itemMDPanel.add(radioButtonYesItem);
 
 		JRadioButton radioButtonNoItem = new JRadioButton("No");
+		radioButtonNoItem.setSelected(true);
+		itemMD = false;
 		radioButtonNoItem.addActionListener(new ActionListener() {
 
 			@Override
@@ -260,7 +272,96 @@ public class WindowUpdateCollection {
 		itemMDoper.add(radioButtonYesItem);
 		itemMDoper.add(radioButtonNoItem);
 
+		JPanel panelDelete = new JPanel();
+		panelDelete.setBorder(new TitledBorder(null, "Delete all items in collection", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		panelDelete.setBounds(84, 246, 223, 47);
+		frame.getContentPane().add(panelDelete);
+
+		JRadioButton radioButtonNoDelete = new JRadioButton("No");
+		radioButtonNoDelete.setSelected(true);
+		itemDeleteBool = false;
+		panelDelete.add(radioButtonNoDelete);
+
+		JRadioButton radioButtonYesDelete = new JRadioButton("Yes");
+		panelDelete.add(radioButtonYesDelete);
+		radioButtonYesDelete.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(radioButtonYesDelete.isSelected()) {
+					itemMD = false;
+					itemDeleteBool = true;
+					radioButtonNoItem.setSelected(true);
+
+				}
+
+			}
+		});
+
+		ButtonGroup itemDelete = new ButtonGroup();
+		itemDelete.add(radioButtonYesDelete);
+		itemDelete.add(radioButtonNoDelete);
+		radioButtonNoDelete.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(radioButtonNoDelete.isSelected()) {
+					itemDeleteBool = false;
+				}
+
+			}
+		});
+
 	}
 
+	//Delete all items
+	public int deleteItems(String key, 
+			String collectionName
+			){
+
+		try {
+			JSONObject itemMetadata = MetadataBuilder.requestToAlveo(key, UploadConstants.CATALOG_URL+ 
+					"search?metadata=collection_name:" + collectionName);
+			String itemNamestemp1 = itemMetadata.get("items").toString();
+			String itemNamestemp2 = itemNamestemp1.substring(1, itemNamestemp1.length() - 1);
+			List<String> itemNames = Arrays.asList(itemNamestemp2.split(","));
+			System.out.println( itemNames.toString());
+			for (String url: itemNames) {
+				System.out.println(url);
+			}
+			for (String url: itemNames) {
+				try {
+					HttpClient httpclient = new HttpClient();
+					DeleteMethod deleteItem = new DeleteMethod( url );
+
+					deleteItem.setRequestHeader( "X-API-KEY",key);
+					deleteItem.setRequestHeader( "Accept","application/json");
+					//			deleteItem.setRequestEntity( new MultipartRequestEntity(deleteItem.getParams()  );
+
+					int response = httpclient.executeMethod( deleteItem );
+					System.out.println( "Response : "+response );
+					System.out.println( deleteItem.getResponseBodyAsString());
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+					continue;
+				}
+			}
+
+		}catch( HttpException e ){
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch( IOException e ){
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+
+
+
+		return 0;
 
 	}
+}

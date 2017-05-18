@@ -68,8 +68,12 @@ import javax.swing.table.DefaultTableModel;
 
 public class MetadataBuilder {
 	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
+	//Keeps track of whether item is new or needs to be updated 
+	//null is untouched, 1 is updated, 2 is new item
+	HashMap<String, Integer> recItemStatus = new HashMap<String,Integer>();
 	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
 	HashMap<String, ArrayList<String>> docNameMap = new HashMap<String, ArrayList<String>>();
+	HashMap<String, List<File>> itemFileList = new HashMap<String, List<File>>();
 	ArrayList<String> itemNameList = new ArrayList<String>();
 	JFrame frame;
 	private JTextField textField;
@@ -160,17 +164,17 @@ public class MetadataBuilder {
 		this.recItemMetadata = recItemMetadata;
 		this.recDocMetadata = recDocMetadata;
 		System.out.println(collectionMD);
-		
+
 		// Get collection metadata
-		if (collectionMD == true) {
-			try{
-				collectionMetadata = (requestToAlveo(key, UploadConstants.CATALOG_URL + collectionDetails.get("collectionName"))).getJSONObject("metadata");
-			} catch (IOException e) {
+		//		if (collectionMD == true) {
+		//			try{
+		//				collectionMetadata = (requestToAlveo(key, UploadConstants.CATALOG_URL + collectionDetails.get("collectionName"))).getJSONObject("metadata");
+		//			} catch (IOException e) {
+		//
+		//			}
+		//
+		//		}
 
-			}
-
-		}
-		
 		if (generateColMD == true){
 			collectionMetadata = InitializeMetadata.initCollection();
 			System.out.println(collectionMetadata);
@@ -189,53 +193,55 @@ public class MetadataBuilder {
 		//Populate item metadata into these ArrayLists
 
 		//		ArrayList<JSONObject> finalItemMetadata = new ArrayList<JSONObject>();
-		
+
 		//If option set to update existing item metadata is true
 		if (itemMD) {
 			getItemMeta(collectionDetails.get("collectionName"), key);
 		}
 		//If option set to have new items/documents is true
 		if (newItem) {
-		//Get sub-directories
-		List<File> subDirs = CollectionUploadGeneral.getDirs(path);
-		for (File subDir: subDirs){
-			HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
-			ArrayList<String> docNameList = new ArrayList<String>();
-			int first = 1;
-			// Set Item name to name of subDirectory
-			String docID = subDir.getName();
-			if (!itemNameList.contains(docID)) {
-				itemNameList.add(docID);
-			}
-			//Get all files from sub-directories
-			List<File> filesList = CollectionUploadGeneral.listFiles(subDir.toString());
-			for(File file: filesList){
-
-				//Need first file metadata for item creation so take from here and mark
-				//if its the first iteration or not
-				float fileBytes = file.length();
-				String docName = file.getName();
-				docNameList.add(docName);
-				String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
-				if (UploadConstants.EXT_MAP.get(fileExt ) == null) {
-					fileExtList.put(fileExt, "Other");
+			//Get sub-directories
+			List<File> subDirs = CollectionUploadGeneral.getDirs(path);
+			for (File subDir: subDirs){
+				HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
+				ArrayList<String> docNameList = new ArrayList<String>();
+				int first = 1;
+				// Set Item name to name of subDirectory
+				String docID = subDir.getName();
+				if (!itemNameList.contains(docID)) {
+					itemNameList.add(docID);
 				}
-				//Populating metadata on ITEM level 
+				//Get all files from sub-directories
+				List<File> filesList = CollectionUploadGeneral.listFiles(subDir.toString());
+				itemFileList.put(docID, filesList);
+				for(File file: filesList){
 
-				System.out.println(recItemMetadata);
-				docs.put(docName, InitializeMetadata.initRec(docID, docName, 
-						fileBytes, fileExt));
-				if (!recItemMetadata.containsKey(docID))
-				{
-					recItemMetadata.put(docID, InitializeMetadata.initItem(docID));
-					//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
+					//Need first file metadata for item creation so take from here and mark
+					//if its the first iteration or not
+					float fileBytes = file.length();
+					String docName = file.getName();
+					docNameList.add(docName);
+					String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
+					if (UploadConstants.EXT_MAP.get(fileExt ) == null) {
+						fileExtList.put(fileExt, "Other");
+					}
+					//Populating metadata on ITEM level 
+
+					System.out.println(recItemMetadata);
+					docs.put(docName, InitializeMetadata.initRec(docID, docName, 
+							fileBytes, fileExt));
+					if (!recItemMetadata.containsKey(docID))
+					{
+						recItemStatus.put(docID, 2);
+						recItemMetadata.put(docID, InitializeMetadata.initItem(docID));
+						//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
+					}
 				}
+				if(!recDocMetadata.containsKey(docID)){
+					recDocMetadata.put(docID, docs);
+				}
+				docNameMap.put(docID, docNameList);
 			}
-			if(!recDocMetadata.containsKey(docID)){
-				recDocMetadata.put(docID, docs);
-			}
-			docNameMap.put(docID, docNameList);
-		}
 		}
 
 		System.out.println(fileExtList);
@@ -274,6 +280,7 @@ public class MetadataBuilder {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				if(rdbtnCollectionMetadata.isSelected()) {
+					textAreaNo = 4;
 					jsonToTable(JSONObject.fromObject(collectionMetadata));
 					table.repaint();
 				}
@@ -390,16 +397,16 @@ public class MetadataBuilder {
 				if ("comboBoxChanged".equals(command)) {
 					//Document
 					if (newItem){
-					DefaultComboBoxModel model = new DefaultComboBoxModel(docNameMap.get(selected.toString()).toArray());
-					docMetaCombo.setModel( model );
+						DefaultComboBoxModel model = new DefaultComboBoxModel(docNameMap.get(selected.toString()).toArray());
+						docMetaCombo.setModel( model );
 					}
 
 					if (textAreaNo ==2){
 
 						try {
-						jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
-								get(docMetaCombo.getSelectedItem().toString()));
-						table.repaint();
+							jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
+									get(docMetaCombo.getSelectedItem().toString()));
+							table.repaint();
 						} catch (java.lang.NullPointerException e) {
 							JOptionPane.showMessageDialog(null,"No document metadata found");
 						}
@@ -417,7 +424,7 @@ public class MetadataBuilder {
 
 		// Document metadata combo-box
 		if (newItem){
-		docMetaCombo = new JComboBox(new DefaultComboBoxModel(docNameMap.get(itemMetaCombo.getSelectedItem().toString()).toArray()));
+			docMetaCombo = new JComboBox(new DefaultComboBoxModel(docNameMap.get(itemMetaCombo.getSelectedItem().toString()).toArray()));
 		} else {
 			docMetaCombo = new JComboBox(new DefaultComboBoxModel());
 		}
@@ -448,8 +455,8 @@ public class MetadataBuilder {
 
 						//                 System.out.println(recItemMetadata.get(selected).toString());
 					} else if (textAreaNo ==3){
-					
-						
+
+
 					}
 				}
 			}
@@ -474,31 +481,45 @@ public class MetadataBuilder {
 		JButton btnUpdate = new JButton("Update");
 		btnUpdate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				if (newItem || itemMD){
+					String selectedItem = itemMetaCombo.getSelectedItem().toString();
 
-				String selectedItem = itemMetaCombo.getSelectedItem().toString();
-				if (textAreaNo == 1){
-					fileExtList = strtoHash(reqJson.getText());
-					System.out.print(fileExtList);
-				} else if (updateAreaNo == 1 && textAreaNo == 2){
-					recDocMetadata.get(selectedItem).
-					put(docMetaCombo.getSelectedItem().toString(), getTableData(table));
-				} else if (updateAreaNo == 2 && textAreaNo == 2){
-					for (String key : recDocMetadata.get(selectedItem).keySet()) {
-						System.out.println("Test key: " + key);
-						JSONObject tempItem = recDocMetadata.get(selectedItem).get(key);
-						recDocMetadata.get(selectedItem).put(key, addTableToJSONObject(tableAll, tempItem));
+					if (textAreaNo == 1){
+						fileExtList = strtoHash(reqJson.getText());
+						System.out.print(fileExtList);
+						// Update selected document
+					} else if (updateAreaNo == 1 && textAreaNo == 2){
+						recDocMetadata.get(selectedItem).
+						put(docMetaCombo.getSelectedItem().toString(), getTableData(table));
+						// Update all documents
+					} else if (updateAreaNo == 2 && textAreaNo == 2){
+						for (String key : recDocMetadata.get(selectedItem).keySet()) {
+							System.out.println("Test key: " + key);
+							JSONObject tempItem = recDocMetadata.get(selectedItem).get(key);
+							recDocMetadata.get(selectedItem).put(key, addTableToJSONObject(tableAll, tempItem));
+						} 
+						// Update selected item
+					}else if (updateAreaNo == 1 && textAreaNo == 3){
+						recItemMetadata.put(selectedItem,
+								getTableData(table));
+						if (recItemStatus.get(selectedItem) == null){
+							recItemStatus.put(selectedItem, 1);
+						}
+						// Update all items
+					}else if (updateAreaNo == 2 && textAreaNo == 3){
+						for (String key : recItemMetadata.keySet()) {
+							JSONObject tempItem = recItemMetadata.get(key);
+							recItemMetadata.put(key, addTableToJSONObject(tableAll, tempItem));
+							if (recItemStatus.get(key) == null){
+								recItemStatus.put(key, 1);
+							}
+						}
+						// Update collection
 					}
-				}else if (updateAreaNo == 1 && textAreaNo == 3){
-					recItemMetadata.put(selectedItem,
-							getTableData(table));
-				}else if (updateAreaNo == 2 && textAreaNo == 3){
-					for (String key : recItemMetadata.keySet()) {
-						JSONObject tempItem = recItemMetadata.get(key);
-						recItemMetadata.put(key, addTableToJSONObject(tableAll, tempItem));
-					}
-
-
+				} else if (textAreaNo == 4){
+					collectionMetadata = getTableData(table);
 				}
+
 			}
 		});
 
@@ -511,19 +532,7 @@ public class MetadataBuilder {
 		JButton btnDelete = new JButton("Delete");
 		btnDelete.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (textAreaNo == 1){
-					//					fileExtList = strtoHash(reqJson.getText());
-					//					System.out.print(fileExtList);
-				} else if (textAreaNo == 2){
-					model.removeRow(table.getSelectedRow());
-
-				}
-				else if (textAreaNo == 3){
-					model.removeRow(table.getSelectedRow());
-
-				}
-
-
+				model.removeRow(table.getSelectedRow());
 			}
 		});
 
@@ -537,7 +546,9 @@ public class MetadataBuilder {
 				WindowExportUpload windowUpload = new WindowExportUpload(path, 
 						collectionDetails, 
 						key, 
-						recItemMetadata, 
+						recItemMetadata,
+						recItemStatus,
+						itemFileList,
 						recDocMetadata, 
 						newItem, 
 						itemMD, 
@@ -547,11 +558,11 @@ public class MetadataBuilder {
 				windowUpload.frame.setVisible(true);
 				// Listener to get built Metadata
 
-					 
-		
-				}
-	
-			
+
+
+			}
+
+
 		});
 		btnContinue.setFont(font1);
 		btnContinue.setBounds(681, 524, 98, 30);
@@ -616,14 +627,21 @@ public class MetadataBuilder {
 		//Button to add metadata to box
 		btnAddMeta.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-
-					String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
+				String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
+				if (updateAreaNo ==1) {
 					if (table.getSelectedRow() == -1) {
 						model.addRow(array);
 					} else {
-					model.insertRow(table.getSelectedRow(), array);
+						model.insertRow(table.getSelectedRow(), array);
+					}
+				} else {
+					if (tableAll.getSelectedRow() == -1) {
+						modelAll.addRow(array);
+					} else {
+						modelAll.insertRow(tableAll.getSelectedRow(), array);
 					}
 				}
+			}
 
 
 		});
@@ -641,8 +659,8 @@ public class MetadataBuilder {
 					lblAlveoDocument.setVisible(false);
 					lblAlveoItem.setVisible(false);
 					scrollBar1.setVisible(true);
-//					scrollBar2.setVisible(false);
-//					scrollBar3.setVisible(false);
+					//					scrollBar2.setVisible(false);
+					//					scrollBar3.setVisible(false);
 					itemMetaCombo.setVisible(false);
 					docMetaCombo.setVisible(false);
 				}
@@ -817,28 +835,28 @@ public class MetadataBuilder {
 	public void getItemMeta(String collectionName, String key) {
 		try {
 			JSONObject itemMetadata = requestToAlveo(key, UploadConstants.CATALOG_URL+ "search?metadata=collection_name:" + collectionName);
-		
+
 			String itemNamestemp1 = itemMetadata.get("items").toString();
 			String itemNamestemp2 = itemNamestemp1.substring(1, itemNamestemp1.length() - 1);
 			List<String> itemNames = Arrays.asList(itemNamestemp2.split(","));
 			for (String temp : itemNames) {
 				try {
-				ArrayList<String> docNameList = new ArrayList<String>();
-				JSONObject request = requestToAlveo(key, temp.substring(1, temp.length()-1));
-				JSONObject temp1 = (JSONObject) request.get("alveo:metadata");
-				String itemName = temp1.get("dc:identifier").toString();
-				recItemMetadata.put(itemName, temp1);
-				itemNameList.add(itemName);
-				System.out.println(temp1.get("dc:identifier").toString());
-				System.out.println(temp1);
-				docNameMap.put(itemName, docNameList);
+					ArrayList<String> docNameList = new ArrayList<String>();
+					JSONObject request = requestToAlveo(key, temp.substring(1, temp.length()-1));
+					JSONObject temp1 = (JSONObject) request.get("alveo:metadata");
+					String itemName = temp1.get("dc:identifier").toString();
+					recItemMetadata.put(itemName, temp1);
+					itemNameList.add(itemName);
+					System.out.println(temp1.get("dc:identifier").toString());
+					System.out.println(temp1);
+					docNameMap.put(itemName, docNameList);
 				} catch (Exception e) {
 					System.out.println(e.getMessage());
 					continue;
 				}
 			}
 			System.out.println(recItemMetadata.toString());
-			
+
 
 
 
@@ -850,7 +868,7 @@ public class MetadataBuilder {
 	}
 
 	// make JSON request to Alveo server
-	public JSONObject requestToAlveo(String key, String appendToUrl) throws IOException {
+	public static JSONObject requestToAlveo(String key, String appendToUrl) throws IOException {
 		JSONObject tmpJSON =  new JSONObject();
 		String serviceURL =	appendToUrl;
 		URL myURL = new URL(serviceURL);
