@@ -102,12 +102,13 @@ public class MetadataBuilder {
 	private JTable table = new JTable(model);
 	private JTable tableAll = new JTable(modelAll);
 	JSONObject collectionMetadata = new JSONObject();
+	String itemID;
 
 	/**
 	 * Create the application.
 	 */
 	public MetadataBuilder(String path, HashMap<String, String> collectionDetails, String key, 
-			Boolean newItem, Boolean itemMD, Boolean collectionMD, Boolean generateColMD) {
+			Boolean newItem, Boolean itemMD, Boolean collectionMD, Boolean generateColMD, JSONObject metadataMapping) {
 		initialize(path, 
 				collectionDetails, 
 				key, 
@@ -116,7 +117,8 @@ public class MetadataBuilder {
 				newItem, 
 				itemMD, 
 				collectionMD, 
-				generateColMD
+				generateColMD,
+				metadataMapping
 				);
 	}
 
@@ -160,7 +162,8 @@ public class MetadataBuilder {
 			Boolean newItem,
 			Boolean itemMD,
 			Boolean collectionMD,
-			Boolean generateColMD) {
+			Boolean generateColMD,
+			JSONObject metadataMapping) {
 		this.recItemMetadata = recItemMetadata;
 		this.recDocMetadata = recDocMetadata;
 		System.out.println(collectionMD);
@@ -190,59 +193,162 @@ public class MetadataBuilder {
 		//An ArrayList containing JSONObjects, which contains item level metadata, will be
 		//populated and can be changed by the user in the editor.
 
-		//Populate item metadata into these ArrayLists
-
-		//		ArrayList<JSONObject> finalItemMetadata = new ArrayList<JSONObject>();
-
 		//If option set to update existing item metadata is true
 		if (itemMD) {
 			getItemMeta(collectionDetails.get("collectionName"), key);
 		}
 		//If option set to have new items/documents is true
+//		if (newItem) {
+//			//Get sub-directories
+//			List<File> subDirs = CollectionUploadGeneral.getDirs(path);
+//			// Get the extensions to be used when scanning for metadata
+//			String[] extensionsToScan = metadataMapping.get("extensions").toString().split(",");
+//			for (File subDir: subDirs){
+//				HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
+//				ArrayList<String> docNameList = new ArrayList<String>();
+//				int first = 1;
+//				// Set Item name to name of subDirectory
+//				String docID = subDir.getName();
+//				if (!itemNameList.contains(docID)) {
+//					itemNameList.add(docID);
+//				}
+//				//Get all files from sub-directories
+//				List<File> filesList = CollectionUploadGeneral.listFiles(subDir.toString());
+//				itemFileList.put(docID, filesList);
+//				for(File file: filesList){
+//
+//					//Need first file metadata for item creation so take from here and mark
+//					//if its the first iteration or not
+//					float fileBytes = file.length();
+//					String docName = file.getName();
+//					docNameList.add(docName);
+//					String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
+//					if (UploadConstants.EXT_MAP.get(fileExt ) == null) {
+//						fileExtList.put(fileExt, "Other");
+//					}
+//					//Populating metadata on ITEM level 
+//
+//					System.out.println(recItemMetadata);
+//					docs.put(docName, InitializeMetadata.initRec(docID, docName, 
+//							fileBytes, fileExt));
+//					if (!recItemMetadata.containsKey(docID))
+//					{
+//						recItemStatus.put(docID, 2);
+//						recItemMetadata.put(docID, InitializeMetadata.initItem(docID));
+//						//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
+//					}
+//				}
+//				if(!recDocMetadata.containsKey(docID)){
+//					recDocMetadata.put(docID, docs);
+//				}
+//				docNameMap.put(docID, docNameList);
+//			}
+//		}
+		// Read in files based on document filenames
+		// NOTE: try and add document metadata to item, if fails, create the item
 		if (newItem) {
 			//Get sub-directories
-			List<File> subDirs = CollectionUploadGeneral.getDirs(path);
-			for (File subDir: subDirs){
+			ArrayList<File> files = new ArrayList<File>();
+			listf(path, files);
+			// Get the extensions to be used when scanning for metadata
+			String[] extensionsToScan = metadataMapping.get("extensions").toString().split(",");
+			
+			String delimeter = metadataMapping.get("delim").toString();
+			for (File file: files){
 				HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
 				ArrayList<String> docNameList = new ArrayList<String>();
 				int first = 1;
-				// Set Item name to name of subDirectory
-				String docID = subDir.getName();
-				if (!itemNameList.contains(docID)) {
-					itemNameList.add(docID);
-				}
-				//Get all files from sub-directories
-				List<File> filesList = CollectionUploadGeneral.listFiles(subDir.toString());
-				itemFileList.put(docID, filesList);
-				for(File file: filesList){
 
-					//Need first file metadata for item creation so take from here and mark
-					//if its the first iteration or not
-					float fileBytes = file.length();
-					String docName = file.getName();
-					docNameList.add(docName);
-					String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
-					if (UploadConstants.EXT_MAP.get(fileExt ) == null) {
-						fileExtList.put(fileExt, "Other");
-					}
-					//Populating metadata on ITEM level 
+				//Define check variable for if metadata has been added from filename or not
+				Boolean fileMetaAdded = false;
+				//				itemFileList.put(docID, filesList);
+				// Set Item name to specified filename portions
+				itemID = "";
+				String docName = file.getName();
+				System.out.println(docName);
+				String[] splitDoc = docName.split("\\" + delimeter);
+				System.out.println(splitDoc);
+				if ( (Boolean) metadataMapping.get("useFirst")) {
+					itemID = itemID + splitDoc[0];
+				}
+				if ( (Boolean) metadataMapping.get("useSecond")) {
+					itemID = itemID + delimeter + splitDoc[1];
+				}
+				if ( (Boolean) metadataMapping.get("useThird")) {
+					itemID = itemID + delimeter + splitDoc[2];
+				}
+				if (!itemNameList.contains(itemID)) {
+					itemNameList.add(itemID);
+				}
+				// extent of file in bytes
+				float fileBytes = file.length();
+				// add name of document to list
+				docNameList.add(docName);
+				// get file extension of document
+				String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
+				// check if document extension is in list of known extensions
+				if (UploadConstants.EXT_MAP.get(fileExt ) == null) {
+					fileExtList.put(fileExt, "Other");
+				}
 
-					System.out.println(recItemMetadata);
-					docs.put(docName, InitializeMetadata.initRec(docID, docName, 
-							fileBytes, fileExt));
-					if (!recItemMetadata.containsKey(docID))
-					{
-						recItemStatus.put(docID, 2);
-						recItemMetadata.put(docID, InitializeMetadata.initItem(docID));
-						//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
+				System.out.println(recItemMetadata);
+				// generate document metadata to be added to hashmap after loop
+				docs.put(docName, InitializeMetadata.initRec(itemID, docName, 
+						fileBytes, fileExt));
+				// Prepare metadata from file if necessary
+
+				//Populating metadata on ITEM level 
+				System.out.println("contains id?:" + !recItemMetadata.containsKey(itemID) + " correct ext?:" + Arrays.asList(extensionsToScan).contains(fileExt) );
+				if (!recItemMetadata.containsKey(itemID) && Arrays.asList(extensionsToScan).contains(fileExt.substring(1)))
+				{
+					//Add metadata from filename
+					recItemStatus.put(itemID, 2);
+					JSONObject itemMetaJSON = InitializeMetadata.initItem(itemID);
+					String firstMeta = ((JSONObject) metadataMapping.get("mapping")).get("first").toString();
+					String secondMeta = ((JSONObject) metadataMapping.get("mapping")).get("second").toString();
+					String thirdMeta = ((JSONObject) metadataMapping.get("mapping")).get("third").toString();
+					if (!(firstMeta.equals(""))){
+						itemMetaJSON.put(firstMeta, splitDoc[0]);
 					}
+					if (!(secondMeta.equals(""))){
+						itemMetaJSON.put(secondMeta, splitDoc[1]);
+					}
+					if (!(thirdMeta.equals(""))){
+						itemMetaJSON.put(thirdMeta, splitDoc[2]);
+					}
+					recItemMetadata.put(itemID, itemMetaJSON);
+					System.out.println("made it!" + recItemMetadata.toString());
+					//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
 				}
-				if(!recDocMetadata.containsKey(docID)){
-					recDocMetadata.put(docID, docs);
+				// Check if the document metadata contains the item and add it + the doc metadata if it doesnt
+				if (recDocMetadata.containsKey(itemID)){
+					recDocMetadata.get(itemID).put(docName, InitializeMetadata.initRec(itemID, docName, 
+						fileBytes, fileExt));
+				} else {
+					HashMap<String, JSONObject> innerJSON = new HashMap<String, JSONObject>();
+					innerJSON.put(docName, InitializeMetadata.initRec(itemID, docName, 
+						fileBytes, fileExt));
+					recDocMetadata.put(itemID, innerJSON);
 				}
-				docNameMap.put(docID, docNameList);
-			}
+				// Add document name to document name map for combobox
+				if (docNameMap.containsKey(itemID)){
+					docNameMap.get(itemID).add(docName);
+				} else {
+					ArrayList<String> innerString = new ArrayList<String>();
+					innerString.add(docName);
+					docNameMap.put(itemID, innerString);
+				}
+				// Keep track of file for documents
+				if (itemFileList.containsKey(itemID)){
+					itemFileList.get(itemID).add(file);
+				} else {
+					ArrayList<File> innerFile = new ArrayList<File>();
+					innerFile.add(file);
+					itemFileList.put(itemID, innerFile);
+				}
+				
 		}
+	}
 
 		System.out.println(fileExtList);
 
@@ -424,6 +530,7 @@ public class MetadataBuilder {
 
 		// Document metadata combo-box
 		if (newItem){
+			System.out.println(itemMetaCombo.getSelectedItem());
 			docMetaCombo = new JComboBox(new DefaultComboBoxModel(docNameMap.get(itemMetaCombo.getSelectedItem().toString()).toArray()));
 		} else {
 			docMetaCombo = new JComboBox(new DefaultComboBoxModel());
@@ -735,7 +842,7 @@ public class MetadataBuilder {
 
 	// Get data from table to JSONObject
 	//REWRITE THIS CODE
-	public JSONObject getTableData (JTable table) {
+	public static JSONObject getTableData (JTable table) {
 		JSONObject dataFromTable = new JSONObject();
 		DefaultTableModel dtm = (DefaultTableModel) table.getModel();
 		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
@@ -782,7 +889,7 @@ public class MetadataBuilder {
 
 	//Helper function for tableToJSON
 	//Inner JSON details
-	public JSONObject getTableDataMulti (DefaultTableModel dtm, int i) {
+	public static JSONObject getTableDataMulti (DefaultTableModel dtm, int i) {
 		JSONObject tmpJSON =  new JSONObject();
 		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
 		//	    Object[][] tableData = new Object[nRow][nCol];
@@ -899,5 +1006,19 @@ public class MetadataBuilder {
 		JSONObject JSONresponse = JSONObject.fromObject(response.toString());
 		System.out.println(JSONresponse.toString());
 		return JSONresponse;
+	}
+	
+	public void listf(String directoryName, ArrayList<File> files) {
+	    File directory = new File(directoryName);
+
+	    // get all the files from a directory
+	    File[] fList = directory.listFiles();
+	    for (File file : fList) {
+	        if (file.isFile()) {
+	            files.add(file);
+	        } else if (file.isDirectory()) {
+	            listf(file.getAbsolutePath(), files);
+	        }
+	    }
 	}
 }

@@ -47,11 +47,13 @@ public class WindowUpdateCollection {
 	JFrame frame;
 	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
 	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
+	JSONObject metadataMapping = new JSONObject();
 	private String path = null;
 	private String absolupath;
 	private String filename;
 	private JTextField textField_1;
 	private Boolean collectionMD, itemMD, newItem, itemDeleteBool;
+	JButton btnFilenameMetadata;
 
 
 	/**
@@ -120,6 +122,7 @@ public class WindowUpdateCollection {
 				// TODO Auto-generated method stub
 				if(addnewYes.isSelected()) {
 					Filechooser.setVisible(true);
+					btnFilenameMetadata.setVisible(true);
 					btnAdd.setVisible(true);
 					newItem = true;
 				}
@@ -135,6 +138,7 @@ public class WindowUpdateCollection {
 				// TODO Auto-generated method stub
 				if(addnewNo.isSelected()) {
 					Filechooser.setVisible(false);
+					btnFilenameMetadata.setVisible(false);
 					btnAdd.setVisible(false);
 					newItem = false;
 				}
@@ -158,7 +162,7 @@ public class WindowUpdateCollection {
 		frame.getContentPane().add(operPanel);
 
 		JButton btnCreateNewCollection = new JButton("Generate Metadata");
-		btnCreateNewCollection.setBounds(64, 302, 262, 36);
+		btnCreateNewCollection.setBounds(64, 334, 262, 36);
 		btnCreateNewCollection.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (path == null && newItem == true){
@@ -170,7 +174,7 @@ public class WindowUpdateCollection {
 					}
 					HashMap<String, String> collectionDetails = new HashMap<String,String>();
 					collectionDetails.put("collectionName",textField_1.getText());
-					MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false);
+					MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false, metadataMapping);
 					builder.frame.setVisible(true);
 
 				}
@@ -274,7 +278,7 @@ public class WindowUpdateCollection {
 
 		JPanel panelDelete = new JPanel();
 		panelDelete.setBorder(new TitledBorder(null, "Delete all items in collection", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelDelete.setBounds(84, 246, 223, 47);
+		panelDelete.setBounds(84, 278, 223, 47);
 		frame.getContentPane().add(panelDelete);
 
 		JRadioButton radioButtonNoDelete = new JRadioButton("No");
@@ -302,6 +306,27 @@ public class WindowUpdateCollection {
 		ButtonGroup itemDelete = new ButtonGroup();
 		itemDelete.add(radioButtonYesDelete);
 		itemDelete.add(radioButtonNoDelete);
+		
+		btnFilenameMetadata = new JButton("Filename Metadata");
+		btnFilenameMetadata.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				WindowFileMetadata fileMeta = new WindowFileMetadata();
+				fileMeta.frame.setVisible(true);
+				// Listener to get built Metadata
+				fileMeta.frame.addWindowListener(new WindowAdapter() {
+					  @Override
+					  public void windowClosing(WindowEvent e) {
+						  metadataMapping = fileMeta.metadataMapping;
+						  System.out.println(metadataMapping.toString());
+					  }
+					 
+					});
+				
+	
+			}
+		});
+		btnFilenameMetadata.setBounds(114, 236, 200, 23);
+		frame.getContentPane().add(btnFilenameMetadata);
 		radioButtonNoDelete.addActionListener(new ActionListener() {
 
 			@Override

@@ -3,6 +3,8 @@ package userInterface;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.HashMap;
 
@@ -37,6 +39,7 @@ public class WindowCreateCollection {
 	JFrame frame;
 	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
 	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
+	JSONObject metadataMapping = new JSONObject();
 	private String path = null;
 	private String absolupath;
 	private String filename;
@@ -118,7 +121,7 @@ public class WindowCreateCollection {
 		operPanel.setBorder(operBorder);
 		operPanel.add(privateCollection);
 		operPanel.add(publicCollection);
-		operPanel.setBounds(77, 194, 200, 96);
+		operPanel.setBounds(77, 212, 200, 78);
 		frame.getContentPane().add(operPanel);
 		
 		JComboBox comboBox = new JComboBox(new DefaultComboBoxModel(licenseList.keySet().toArray()));
@@ -138,7 +141,7 @@ public class WindowCreateCollection {
 						collectionDetails.put("metadataField",textField.getText());
 						collectionDetails.put("private", privateField);
 						collectionDetails.put("license", licenseList.get(comboBox.getSelectedItem()).toString());
-				MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, true, false, false, true);
+				MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, true, false, false, true, metadataMapping);
 				builder.frame.setVisible(true);
 
 				}
@@ -205,6 +208,27 @@ public class WindowCreateCollection {
 		textField.setColumns(10);
 		textField.setBounds(180, 99, 186, 29);
 		frame.getContentPane().add(textField);
+		
+		JButton btnFilenameMetadata = new JButton("Filename Metadata");
+		btnFilenameMetadata.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				WindowFileMetadata fileMeta = new WindowFileMetadata();
+				fileMeta.frame.setVisible(true);
+				// Listener to get built Metadata
+				fileMeta.frame.addWindowListener(new WindowAdapter() {
+					  @Override
+					  public void windowClosing(WindowEvent e) {
+						  metadataMapping = fileMeta.metadataMapping;
+						  System.out.println(metadataMapping.toString());
+					  }
+					 
+					});
+				
+	
+			}
+		});
+		btnFilenameMetadata.setBounds(102, 180, 200, 23);
+		frame.getContentPane().add(btnFilenameMetadata);
 
 	}
 }
