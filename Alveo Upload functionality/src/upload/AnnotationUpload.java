@@ -25,7 +25,7 @@ public class AnnotationUpload {
 		
 		String url =  UploadConstants.CATALOG_URL + collection +"/" + docID + "/annotations";
 		System.out.println(url);
-		File file =  new File(path + File.separator + docID + ".json");
+		File file =  new File(path);
 
 		
 		try{

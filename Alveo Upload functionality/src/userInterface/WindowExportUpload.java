@@ -66,7 +66,8 @@ public class WindowExportUpload {
 			Boolean itemMD,
 			Boolean collectionMD,
 			Boolean generateColMD,
-			JSONObject collectionMetadata) {
+			JSONObject collectionMetadata,
+			HashMap<String, File> annotationFileList) {
 
 		initialize(path, 
 				collectionDetails, 
@@ -79,7 +80,8 @@ public class WindowExportUpload {
 				itemMD, 
 				collectionMD, 
 				generateColMD,
-				collectionMetadata
+				collectionMetadata,
+				annotationFileList
 				);
 	}
 
@@ -98,7 +100,8 @@ public class WindowExportUpload {
 			Boolean itemMD,
 			Boolean collectionMD,
 			Boolean generateColMD,
-			JSONObject collectionMetadata) {
+			JSONObject collectionMetadata,
+			HashMap<String, File> annotationFileList) {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 400, 400);
 		frame.setLocationRelativeTo(null);
@@ -164,16 +167,21 @@ public class WindowExportUpload {
 					}
 				}
 				if (newItem){
+					String collectionName = collectionDetails.get("collectionName");
 					for (String itemKey : recItemMetadata.keySet()) {
 						if (recItemStatus.get(itemKey) == 2){
 							//Create item
-							response = createItem(key, collectionDetails.get("collectionName"), 
-									recItemMetadata.get(itemKey));
+							File firstFile = itemFileList.get(itemKey).get(0);
+							JSONObject ausnc_doc_v = 
+									recDocMetadata.get(itemKey).get(firstFile.getName());
+							response = createItemFile(key, collectionName, 
+									recItemMetadata.get(itemKey), ausnc_doc_v, firstFile);
+//							itemFileList.get(itemKey).remove(0);
 							System.out.println(response);
 							//Upload documents
 							for (File fileToUpload: itemFileList.get(itemKey)){
 								response = createDocument(key, 
-										collectionDetails.get("collectionName"), 
+										collectionName, 
 										itemKey,
 										fileToUpload,
 										recDocMetadata.get(itemKey).get(fileToUpload.getName()));
@@ -181,7 +189,17 @@ public class WindowExportUpload {
 
 							}
 						}
+						// Check if annotations exist and upload them
+						if (annotationFileList.containsKey(itemKey)){
+							try {
+								upload.AnnotationUpload.annUpload(annotationFileList.get(itemKey).getAbsolutePath(), itemKey, key, collectionName);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
 					}
+
 				}
 			}
 		});
@@ -330,9 +348,81 @@ public class WindowExportUpload {
 			filePost.setRequestEntity( new MultipartRequestEntity( parts, filePost.getParams() ) );
 
 			int response = httpclient.executeMethod( filePost );
+			
 			System.out.println( "Response : "+response );
-			System.out.println( filePost.getResponseBodyAsString());
+			System.out.println( "item resp: " + filePost.getResponseBodyAsString());
 			return response;
+			
+			
+//			CloseableHttpClient httpClient = HttpClientBuilder.create().build(); 
+//			JSONObject items = new JSONObject();
+//			items.put("items", MetadataGeneral.createMetadata(itemMetadata));
+//
+//
+//			HttpPost request = new HttpPost(UploadConstants.CATALOG_URL +collectionName);
+//			StringEntity params =new StringEntity(items.toString());
+//			request.addHeader("X-API-KEY",key);
+//			request.addHeader("Accept","application/json");
+//			request.addHeader("Content-Type", "application/json; charset=UTF-8");
+//			request.setEntity(params);
+//			HttpResponse response = httpClient.execute(request);
+//			int responseCode = response.getStatusLine().getStatusCode();
+//			System.out.println(response);
+//			return responseCode;
+		}
+		catch( HttpException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch( IOException e )
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
+	
+	public int createItemFile(String key, String collectionName, JSONObject itemMetadata, JSONObject ausnc_doc_v, File firstFile){
+		//Create item
+		try{
+			HttpClient httpclient = new HttpClient();
+			PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL +collectionName );
+			JSONArray ausnc_doc = new JSONArray();
+			ausnc_doc.add(ausnc_doc_v.toString());
+			itemMetadata.element("ausnc:document", ausnc_doc.toString());			
+			JSONArray itemMeta = MetadataGeneral.createMetadata(itemMetadata);
+			Part[] parts = {new FilePart("file", firstFile),
+					new StringPart( "items",MetadataGeneral.createMetadata( 
+							itemMetadata)
+							.toString()) };
+
+			filePost.setRequestHeader( "X-API-KEY",key);
+			filePost.setRequestHeader( "Accept","application/json");
+			filePost.setRequestEntity( new MultipartRequestEntity( parts, filePost.getParams() ) );
+
+			int response = httpclient.executeMethod( filePost );
+			
+			System.out.println( "Response : "+response );
+			System.out.println( "item resp: " + filePost.getResponseBodyAsString());
+			return response;
+			
+			
+//			CloseableHttpClient httpClient = HttpClientBuilder.create().build(); 
+//			JSONObject items = new JSONObject();
+//			items.put("items", MetadataGeneral.createMetadata(itemMetadata));
+//
+//
+//			HttpPost request = new HttpPost(UploadConstants.CATALOG_URL +collectionName);
+//			StringEntity params =new StringEntity(items.toString());
+//			request.addHeader("X-API-KEY",key);
+//			request.addHeader("Accept","application/json");
+//			request.addHeader("Content-Type", "application/json; charset=UTF-8");
+//			request.setEntity(params);
+//			HttpResponse response = httpClient.execute(request);
+//			int responseCode = response.getStatusLine().getStatusCode();
+//			System.out.println(response);
+//			return responseCode;
 		}
 		catch( HttpException e )
 		{
@@ -359,7 +449,9 @@ public class WindowExportUpload {
 		if (fileUpload.exists()){
 			try{
 				String url = UploadConstants.CATALOG_URL + collectionName + "/" + itemName;
+				
 				PostMethod filePost = new PostMethod(url);
+				System.out.println("url of doc upload: " +  url);
 				System.out.println(docMetadata);
 				System.out.println(itemName);
 				docMetadata.put("@context", InitializeMetadata.initContext());

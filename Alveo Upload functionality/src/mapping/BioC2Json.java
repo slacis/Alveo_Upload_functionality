@@ -38,9 +38,9 @@ import upload.UploadConstants;
 
 public class BioC2Json {
 		
-	public static void writeFile(String filename, String sets, File file)  
+	public static void writeFile(String filename, String sets, File file, String outputPath)  
             throws IOException { 
-		File tf = new File(file,filename);
+		File tf = new File(outputPath, filename);
         FileWriter fw = new FileWriter(tf);  
         PrintWriter out = new PrintWriter(fw);  
         out.write(sets);  
@@ -49,7 +49,7 @@ public class BioC2Json {
         out.close();  
     }
 	
-	public static List<String> writeJson(String path, String filename, String collection) throws XMLStreamException, IOException{
+	public static List<String> writeJson(String path, String filename, String collection, String outputPath) throws XMLStreamException, IOException{
 		
 		List<String> docIDs = new ArrayList<String>();
 	
@@ -318,7 +318,7 @@ public class BioC2Json {
 			String text_fileName;
 			text_fileName =  docID + ".json";
 			docjsonObject.element("alveo:annotations", annArray);
-			writeFile(text_fileName, docjsonObject.toString(),bf.getParentFile());
+			writeFile(text_fileName.toLowerCase(), docjsonObject.toString(),bf.getParentFile(), outputPath);
 			
 		}
 				

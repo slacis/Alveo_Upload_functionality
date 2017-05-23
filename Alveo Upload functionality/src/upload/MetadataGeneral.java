@@ -33,6 +33,7 @@ public class MetadataGeneral {
 		context.element("dcterms" , "http://purl.org/dc/terms/");
 		context.element("foaf" , "http://xmlns.com/foaf/0.1/");
 		context.element("hcsvlab" , "http://hcsvlab.org/vocabulary/");	
+		context.element("mbep" , "http://hcsvlab.org/vocabulary");	
 		docMetadata_v.element("@context", context.toString());			
 			
 //		graph_v.element("@id" , docID);

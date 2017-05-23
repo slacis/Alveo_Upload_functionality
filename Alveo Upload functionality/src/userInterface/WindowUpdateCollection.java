@@ -54,6 +54,7 @@ public class WindowUpdateCollection {
 	private JTextField textField_1;
 	private Boolean collectionMD, itemMD, newItem, itemDeleteBool;
 	JButton btnFilenameMetadata;
+	private JTextField txtMetadataPrefix;
 
 
 	/**
@@ -155,7 +156,7 @@ public class WindowUpdateCollection {
 		operPanel.setBorder(operBorder);
 		operPanel.add(addnewNo);
 		operPanel.add(addnewYes);
-		operPanel.setBounds(102, 143, 223, 47);
+		operPanel.setBounds(103, 113, 223, 47);
 
 
 
@@ -174,6 +175,7 @@ public class WindowUpdateCollection {
 					}
 					HashMap<String, String> collectionDetails = new HashMap<String,String>();
 					collectionDetails.put("collectionName",textField_1.getText());
+					collectionDetails.put("metadataField", txtMetadataPrefix.getText());
 					MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false, metadataMapping);
 					builder.frame.setVisible(true);
 
@@ -327,6 +329,15 @@ public class WindowUpdateCollection {
 		});
 		btnFilenameMetadata.setBounds(114, 236, 200, 23);
 		frame.getContentPane().add(btnFilenameMetadata);
+		
+		JLabel lblMetadata = new JLabel("Metadata Prefix");
+		lblMetadata.setBounds(39, 170, 130, 15);
+		frame.getContentPane().add(lblMetadata);
+		
+		txtMetadataPrefix = new JTextField();
+		txtMetadataPrefix.setColumns(10);
+		txtMetadataPrefix.setBounds(178, 165, 186, 29);
+		frame.getContentPane().add(txtMetadataPrefix);
 		radioButtonNoDelete.addActionListener(new ActionListener() {
 
 			@Override

@@ -45,7 +45,7 @@ import bioc.io.standard.BioCFactoryImpl;
 
 public class BioC2Alveo {
 	
-	public static void writeAlveoFiles(String path) throws XMLStreamException, IOException{
+	public static void writeAlveoFiles(String path, String outputPath) throws XMLStreamException, IOException{
 	
 		BioCFactoryImpl format = new BioCFactoryImpl();
 
@@ -61,11 +61,11 @@ public class BioC2Alveo {
 			
 			String docID = d.getID();
 			String dtext = "";	
-			String doc_fileName = docID + ".xml";
+			String doc_fileName = docID.toLowerCase() + ".xml";
 			System.out.println("Filename: " + doc_fileName);			
 	        XMLOutputFactory xof = XMLOutputFactory.newInstance();
 	        XMLStreamWriter xmlWriter = null;	        
-	        File af = new File(bf.getParentFile(),doc_fileName);
+	        File af = new File(outputPath,doc_fileName);
 	        xmlWriter = xof.createXMLStreamWriter(new FileWriter(af));
 	        	        
 	        
@@ -300,7 +300,7 @@ public class BioC2Alveo {
 			
 			String text_fileName;
 			text_fileName =  docID + ".txt";		
-			File tf = new File(bf.getParentFile(),text_fileName);
+			File tf = new File(outputPath,text_fileName.toLowerCase());
 			FileWriter fw = new FileWriter(tf);
 			BufferedWriter bw = new BufferedWriter(fw);	        
 			bw.write(dtext);

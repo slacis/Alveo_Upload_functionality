@@ -36,7 +36,7 @@ public class WindowFileMetadata {
 	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
 	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
 	JSONObject metadataMapping = new JSONObject();
-	JCheckBox chckbxFirst, chckbxSecond, chckbxThird;
+	JCheckBox chckbxFirst, chckbxSecond, chckbxThird, chckbxForth;
 	private String path = null;
 	private String absolupath;
 	private String filename;
@@ -90,6 +90,11 @@ public class WindowFileMetadata {
 				} else {
 					metadataMapping.put("useThird", false);
 				}
+				if (chckbxForth.isSelected()) {
+					metadataMapping.put("useForth", true);
+				} else {
+					metadataMapping.put("useForth", false);
+				}
 				
 				frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
 				}
@@ -104,9 +109,11 @@ public class WindowFileMetadata {
 		String[] first = {"first", "", "item"};
 		String[] second = {"second", "", "item"};
 		String[] third = {"third", "", "item"};
+		String[] forth = {"forth", "", "forth"};
 		model.addRow(first);
 		model.addRow(second);
 		model.addRow(third);
+		model.addRow(forth);
 		table = new JTable(model);
 		JScrollPane scrollPane = new JScrollPane(table);
 		scrollPane.setBounds(35, 138, 320, 121);
@@ -128,16 +135,16 @@ public class WindowFileMetadata {
 		
 		 chckbxFirst = new JCheckBox("first");
 		 chckbxFirst.setSelected(true);
-		chckbxFirst.setBounds(68, 285, 66, 23);
+		chckbxFirst.setBounds(48, 300, 66, 23);
 		frame.getContentPane().add(chckbxFirst);
 		
 		chckbxSecond = new JCheckBox("second");
 		chckbxSecond.setSelected(true);
-		chckbxSecond.setBounds(138, 285, 91, 23);
+		chckbxSecond.setBounds(118, 300, 91, 23);
 		frame.getContentPane().add(chckbxSecond);
 		
 		chckbxThird = new JCheckBox("third");
-		chckbxThird.setBounds(229, 285, 91, 23);
+		chckbxThird.setBounds(209, 300, 66, 23);
 		frame.getContentPane().add(chckbxThird);
 		
 		JLabel lblPortionsToUse = new JLabel("Portions to use in Item title");
@@ -153,6 +160,10 @@ public class WindowFileMetadata {
 		textField.setBounds(220, 74, 25, 19);
 		frame.getContentPane().add(textField);
 		textField.setColumns(10);
+		
+		chckbxForth = new JCheckBox("forth");
+		chckbxForth.setBounds(281, 300, 91, 23);
+		frame.getContentPane().add(chckbxForth);
 		
 
 

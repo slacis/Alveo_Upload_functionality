@@ -44,7 +44,7 @@ public class WindowCreateCollection {
 	private String absolupath;
 	private String filename;
 	private JTextField textField_1;
-	private JTextField textField;
+	private JTextField prefix;
 	HashMap<String, Integer> licenseList = new HashMap<String, Integer>();
 	String privateField;
 
@@ -138,7 +138,7 @@ public class WindowCreateCollection {
 				} else {
 				HashMap<String, String> collectionDetails = new HashMap<String,String>();
 						collectionDetails.put("collectionName",textField_1.getText());
-						collectionDetails.put("metadataField",textField.getText());
+						collectionDetails.put("metadataField",prefix.getText());
 						collectionDetails.put("private", privateField);
 						collectionDetails.put("license", licenseList.get(comboBox.getSelectedItem()).toString());
 				MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, true, false, false, true, metadataMapping);
@@ -204,10 +204,10 @@ public class WindowCreateCollection {
 		lblMetadataPrefix.setBounds(41, 106, 130, 15);
 		frame.getContentPane().add(lblMetadataPrefix);
 
-		textField = new JTextField();
-		textField.setColumns(10);
-		textField.setBounds(180, 99, 186, 29);
-		frame.getContentPane().add(textField);
+		prefix = new JTextField();
+		prefix.setColumns(10);
+		prefix.setBounds(180, 99, 186, 29);
+		frame.getContentPane().add(prefix);
 		
 		JButton btnFilenameMetadata = new JButton("Filename Metadata");
 		btnFilenameMetadata.addActionListener(new ActionListener() {

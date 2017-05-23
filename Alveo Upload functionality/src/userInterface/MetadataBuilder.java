@@ -14,6 +14,7 @@ import javax.swing.JFileChooser;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 import jdk.internal.org.objectweb.asm.tree.analysis.Value;
+import mapping.JSONMappings;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
@@ -30,6 +31,7 @@ import java.nio.file.Paths;
 import net.sf.json.JSONSerializer;
 import upload.CollectionUploadGeneral;
 import upload.InitializeMetadata;
+import upload.ReadSpreadsheet;
 import upload.UploadConstants;
 import net.sf.json.JSONObject;
 
@@ -48,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.awt.event.ActionEvent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -74,6 +77,11 @@ public class MetadataBuilder {
 	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
 	HashMap<String, ArrayList<String>> docNameMap = new HashMap<String, ArrayList<String>>();
 	HashMap<String, List<File>> itemFileList = new HashMap<String, List<File>>();
+	HashMap<String, File> annotationFileList = new HashMap<String, File>();
+	// Case insensitive map for meta import
+	Map<String, String> META_MAP = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+	// Hashmap for imported metadata
+	static HashMap<String, JSONObject> importedMetadata = new HashMap<String, JSONObject>();
 	ArrayList<String> itemNameList = new ArrayList<String>();
 	JFrame frame;
 	private JTextField textField;
@@ -103,6 +111,7 @@ public class MetadataBuilder {
 	private JTable tableAll = new JTable(modelAll);
 	JSONObject collectionMetadata = new JSONObject();
 	String itemID;
+	String metadataPath = null;
 
 	/**
 	 * Create the application.
@@ -255,8 +264,9 @@ public class MetadataBuilder {
 			
 			String delimeter = metadataMapping.get("delim").toString();
 			for (File file: files){
-				HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
-				ArrayList<String> docNameList = new ArrayList<String>();
+
+//				HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
+//				ArrayList<String> docNameList = new ArrayList<String>();
 				int first = 1;
 
 				//Define check variable for if metadata has been added from filename or not
@@ -265,8 +275,9 @@ public class MetadataBuilder {
 				// Set Item name to specified filename portions
 				itemID = "";
 				String docName = file.getName();
+				String docNameNoExt = FilenameUtils.removeExtension(docName);
 				System.out.println(docName);
-				String[] splitDoc = docName.split("\\" + delimeter);
+				String[] splitDoc = docNameNoExt.split("\\" + delimeter);
 				System.out.println(splitDoc);
 				if ( (Boolean) metadataMapping.get("useFirst")) {
 					itemID = itemID + splitDoc[0];
@@ -276,14 +287,17 @@ public class MetadataBuilder {
 				}
 				if ( (Boolean) metadataMapping.get("useThird")) {
 					itemID = itemID + delimeter + splitDoc[2];
-				}
+					}
+				if ( (Boolean) metadataMapping.get("useForth")) {
+					itemID = itemID + delimeter + splitDoc[3];
+					}
 				if (!itemNameList.contains(itemID)) {
 					itemNameList.add(itemID);
 				}
 				// extent of file in bytes
 				float fileBytes = file.length();
 				// add name of document to list
-				docNameList.add(docName);
+//				docNameList.add(docName);
 				// get file extension of document
 				String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
 				// check if document extension is in list of known extensions
@@ -293,10 +307,15 @@ public class MetadataBuilder {
 
 				System.out.println(recItemMetadata);
 				// generate document metadata to be added to hashmap after loop
-				docs.put(docName, InitializeMetadata.initRec(itemID, docName, 
-						fileBytes, fileExt));
+//				docs.put(docName, InitializeMetadata.initRec(itemID, docName, 
+//						fileBytes, fileExt));
 				// Prepare metadata from file if necessary
-
+				
+				
+				//Check if file is JSON annotation file
+				if ((FilenameUtils.getExtension(file.getAbsolutePath()).equals("json"))) {
+					annotationFileList.put(itemID, file);
+				} else {
 				//Populating metadata on ITEM level 
 				System.out.println("contains id?:" + !recItemMetadata.containsKey(itemID) + " correct ext?:" + Arrays.asList(extensionsToScan).contains(fileExt) );
 				if (!recItemMetadata.containsKey(itemID) && Arrays.asList(extensionsToScan).contains(fileExt.substring(1)))
@@ -307,6 +326,7 @@ public class MetadataBuilder {
 					String firstMeta = ((JSONObject) metadataMapping.get("mapping")).get("first").toString();
 					String secondMeta = ((JSONObject) metadataMapping.get("mapping")).get("second").toString();
 					String thirdMeta = ((JSONObject) metadataMapping.get("mapping")).get("third").toString();
+					String fourthMeta = ((JSONObject) metadataMapping.get("mapping")).get("forth").toString();
 					if (!(firstMeta.equals(""))){
 						itemMetaJSON.put(firstMeta, splitDoc[0]);
 					}
@@ -315,6 +335,9 @@ public class MetadataBuilder {
 					}
 					if (!(thirdMeta.equals(""))){
 						itemMetaJSON.put(thirdMeta, splitDoc[2]);
+					}
+					if (!(fourthMeta.equals(""))){
+						itemMetaJSON.put(fourthMeta, splitDoc[2]);
 					}
 					recItemMetadata.put(itemID, itemMetaJSON);
 					System.out.println("made it!" + recItemMetadata.toString());
@@ -346,8 +369,27 @@ public class MetadataBuilder {
 					innerFile.add(file);
 					itemFileList.put(itemID, innerFile);
 				}
+			}
 				
 		}
+			// Check if metadata excel file exists and import
+			if (metadataPath != null) {
+				ReadSpreadsheet.readMeta(metadataPath, 
+						"Recordings", 
+						ReadSpreadsheet.getMap(ReadSpreadsheet.MAPPING,"Mapping", META_MAP), 
+						collectionDetails.get("metadataField"), 
+						(Boolean) metadataMapping.get("useFirst"), 
+						(Boolean) metadataMapping.get("useSecond"), 
+						(Boolean) metadataMapping.get("useThird"), 
+						delimeter,
+						importedMetadata);
+				// Combine with existing metadata
+				for (String itemKey: importedMetadata.keySet()){
+					if (recItemMetadata.containsKey(itemKey)) {
+						JSONMappings.combineJSONObject(importedMetadata.get(itemKey), recItemMetadata.get(itemKey));
+					}
+				}
+			}
 	}
 
 		System.out.println(fileExtList);
@@ -661,7 +703,8 @@ public class MetadataBuilder {
 						itemMD, 
 						collectionMD, 
 						generateColMD,
-						collectionMetadata);
+						collectionMetadata,
+						annotationFileList);
 				windowUpload.frame.setVisible(true);
 				// Listener to get built Metadata
 
@@ -1014,6 +1057,10 @@ public class MetadataBuilder {
 	    // get all the files from a directory
 	    File[] fList = directory.listFiles();
 	    for (File file : fList) {
+	    	// look for metadata file
+	    	if (file.getName().equals("metadata.xlsx")){
+	    		metadataPath = file.getAbsolutePath();
+	    	}else 
 	        if (file.isFile()) {
 	            files.add(file);
 	        } else if (file.isDirectory()) {
