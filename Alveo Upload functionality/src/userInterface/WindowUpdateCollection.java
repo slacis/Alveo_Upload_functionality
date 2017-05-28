@@ -44,17 +44,17 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 
 public class WindowUpdateCollection {
 
-	JFrame frame;
-	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
-	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
-	JSONObject metadataMapping = new JSONObject();
+	public JFrame frame;
+	private JSONObject metadataMapping = new JSONObject();
 	private String path = null;
 	private String absolupath;
 	private String filename;
-	private JTextField textField_1;
-	private Boolean collectionMD, itemMD, newItem, itemDeleteBool;
-	JButton btnFilenameMetadata;
+	private String itemDelete;
+	private JTextField collectionName;
+	private Boolean collectionMD, itemMD, newItem;
+	private JButton btnFilenameMetadata;
 	private JTextField txtMetadataPrefix;
+	private Boolean fileMetadataSet = false;
 
 
 	/**
@@ -73,7 +73,6 @@ public class WindowUpdateCollection {
 	private void initialize(String key) {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 400, 400);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 
@@ -146,7 +145,7 @@ public class WindowUpdateCollection {
 
 			}
 		});
-		
+
 		ButtonGroup operation = new ButtonGroup();
 		operation.add(addnewNo);
 		operation.add(addnewYes);
@@ -166,18 +165,20 @@ public class WindowUpdateCollection {
 		btnCreateNewCollection.setBounds(64, 334, 262, 36);
 		btnCreateNewCollection.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (path == null && newItem == true){
+				if (path == null  || fileMetadataSet == false && newItem == true){
 					//Error message : Null Path 
-					JOptionPane.showMessageDialog(null, "Please select path", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Please select path and file metadata", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
 				} else {
-					if (itemDeleteBool){
-						deleteItems(key, textField_1.getText());
-					}
 					HashMap<String, String> collectionDetails = new HashMap<String,String>();
-					collectionDetails.put("collectionName",textField_1.getText());
+					collectionDetails.put("collectionName",collectionName.getText());
 					collectionDetails.put("metadataField", txtMetadataPrefix.getText());
-					MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false, metadataMapping);
-					builder.frame.setVisible(true);
+					collectionDetails.put("itemDelete", itemDelete);
+					try {
+						MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false, metadataMapping);
+						builder.frame.setVisible(true);
+					} catch (java.lang.ArrayIndexOutOfBoundsException e) {
+						JOptionPane.showMessageDialog(null, "Array Index Error, check delimeter:" + e.getMessage(), "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+					}
 
 				}
 
@@ -185,10 +186,10 @@ public class WindowUpdateCollection {
 		});
 		frame.getContentPane().add(btnCreateNewCollection);
 
-		textField_1 = new JTextField();
-		textField_1.setColumns(10);
-		textField_1.setBounds(180, 24, 186, 29);
-		frame.getContentPane().add(textField_1);
+		collectionName = new JTextField();
+		collectionName.setColumns(10);
+		collectionName.setBounds(180, 24, 186, 29);
+		frame.getContentPane().add(collectionName);
 
 		JLabel lblCollectionName = new JLabel("Collection Name");
 		lblCollectionName.setBounds(41, 38, 130, 15);
@@ -203,7 +204,7 @@ public class WindowUpdateCollection {
 		//		collectionMDPanel.setBorder(null);
 		collectionMDPanel.setBounds(9, 70, 177, 38);
 		frame.getContentPane().add(collectionMDPanel);
-		
+
 		JRadioButton radioButtonYes = new JRadioButton("Yes");
 		radioButtonYes.addActionListener(new ActionListener() {
 
@@ -285,7 +286,7 @@ public class WindowUpdateCollection {
 
 		JRadioButton radioButtonNoDelete = new JRadioButton("No");
 		radioButtonNoDelete.setSelected(true);
-		itemDeleteBool = false;
+		itemDelete = "false";
 		panelDelete.add(radioButtonNoDelete);
 
 		JRadioButton radioButtonYesDelete = new JRadioButton("Yes");
@@ -297,7 +298,7 @@ public class WindowUpdateCollection {
 				// TODO Auto-generated method stub
 				if(radioButtonYesDelete.isSelected()) {
 					itemMD = false;
-					itemDeleteBool = true;
+					itemDelete = "true";
 					radioButtonNoItem.setSelected(true);
 
 				}
@@ -305,35 +306,36 @@ public class WindowUpdateCollection {
 			}
 		});
 
-		ButtonGroup itemDelete = new ButtonGroup();
-		itemDelete.add(radioButtonYesDelete);
-		itemDelete.add(radioButtonNoDelete);
-		
+		ButtonGroup itemDeleteGroup = new ButtonGroup();
+		itemDeleteGroup.add(radioButtonYesDelete);
+		itemDeleteGroup.add(radioButtonNoDelete);
+
 		btnFilenameMetadata = new JButton("Filename Metadata");
 		btnFilenameMetadata.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				WindowFileMetadata fileMeta = new WindowFileMetadata();
+				fileMetadataSet = true;
 				fileMeta.frame.setVisible(true);
 				// Listener to get built Metadata
 				fileMeta.frame.addWindowListener(new WindowAdapter() {
-					  @Override
-					  public void windowClosing(WindowEvent e) {
-						  metadataMapping = fileMeta.metadataMapping;
-						  System.out.println(metadataMapping.toString());
-					  }
-					 
-					});
-				
-	
+					@Override
+					public void windowClosing(WindowEvent e) {
+						metadataMapping = fileMeta.metadataMapping;
+						System.out.println(metadataMapping.toString());
+					}
+
+				});
+
+
 			}
 		});
 		btnFilenameMetadata.setBounds(114, 236, 200, 23);
 		frame.getContentPane().add(btnFilenameMetadata);
-		
+
 		JLabel lblMetadata = new JLabel("Metadata Prefix");
 		lblMetadata.setBounds(39, 170, 130, 15);
 		frame.getContentPane().add(lblMetadata);
-		
+
 		txtMetadataPrefix = new JTextField();
 		txtMetadataPrefix.setColumns(10);
 		txtMetadataPrefix.setBounds(178, 165, 186, 29);
@@ -344,7 +346,7 @@ public class WindowUpdateCollection {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				if(radioButtonNoDelete.isSelected()) {
-					itemDeleteBool = false;
+					itemDelete = "false";
 				}
 
 			}
@@ -352,52 +354,5 @@ public class WindowUpdateCollection {
 
 	}
 
-	//Delete all items
-	public int deleteItems(String key, 
-			String collectionName
-			){
 
-		try {
-			JSONObject itemMetadata = MetadataBuilder.requestToAlveo(key, UploadConstants.CATALOG_URL+ 
-					"search?metadata=collection_name:" + collectionName);
-			String itemNamestemp1 = itemMetadata.get("items").toString();
-			String itemNamestemp2 = itemNamestemp1.substring(1, itemNamestemp1.length() - 1);
-			List<String> itemNames = Arrays.asList(itemNamestemp2.split(","));
-			System.out.println( itemNames.toString());
-			for (String url: itemNames) {
-				System.out.println(url);
-			}
-			for (String url: itemNames) {
-				try {
-					HttpClient httpclient = new HttpClient();
-					DeleteMethod deleteItem = new DeleteMethod( url );
-
-					deleteItem.setRequestHeader( "X-API-KEY",key);
-					deleteItem.setRequestHeader( "Accept","application/json");
-					//			deleteItem.setRequestEntity( new MultipartRequestEntity(deleteItem.getParams()  );
-
-					int response = httpclient.executeMethod( deleteItem );
-					System.out.println( "Response : "+response );
-					System.out.println( deleteItem.getResponseBodyAsString());
-				} catch (Exception e) {
-					System.out.println(e.getMessage());
-					continue;
-				}
-			}
-
-		}catch( HttpException e ){
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}catch( IOException e ){
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-
-
-
-
-		return 0;
-
-	}
 }

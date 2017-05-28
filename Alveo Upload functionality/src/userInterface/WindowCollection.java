@@ -55,7 +55,7 @@ public class WindowCollection {
 				updateWindow.frame.setVisible(true);
 				}
 		});
-		btnUpdateExistingCol.setBounds(72, 152, 262, 36);
+		btnUpdateExistingCol.setBounds(68, 183, 262, 36);
 		frame.getContentPane().add(btnUpdateExistingCol);
 		
 		JButton btnCreateNewCollection = new JButton("Create New Collection");
@@ -65,11 +65,11 @@ public class WindowCollection {
 				createWindow.frame.setVisible(true);
 				}
 		});
-		btnCreateNewCollection.setBounds(72, 99, 262, 36);
+		btnCreateNewCollection.setBounds(68, 130, 262, 36);
 		frame.getContentPane().add(btnCreateNewCollection);
 		
 		JButton btnConvertCollectionTo = new JButton("Convert Collection ");
-		btnConvertCollectionTo.setBounds(72, 200, 262, 36);
+		btnConvertCollectionTo.setBounds(68, 231, 262, 36);
 		btnConvertCollectionTo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				WindowConvert convertWindow= new WindowConvert();

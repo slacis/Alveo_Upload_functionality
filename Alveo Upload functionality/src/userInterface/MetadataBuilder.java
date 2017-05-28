@@ -29,7 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import net.sf.json.JSONSerializer;
-import upload.CollectionUploadGeneral;
 import upload.InitializeMetadata;
 import upload.ReadSpreadsheet;
 import upload.UploadConstants;
@@ -70,48 +69,59 @@ import javax.swing.table.DefaultTableModel;
 
 
 public class MetadataBuilder {
-	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
+	private HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
 	//Keeps track of whether item is new or needs to be updated 
 	//null is untouched, 1 is updated, 2 is new item
-	HashMap<String, Integer> recItemStatus = new HashMap<String,Integer>();
-	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
-	HashMap<String, ArrayList<String>> docNameMap = new HashMap<String, ArrayList<String>>();
-	HashMap<String, List<File>> itemFileList = new HashMap<String, List<File>>();
-	HashMap<String, File> annotationFileList = new HashMap<String, File>();
+	private HashMap<String, Integer> recItemStatus = new HashMap<String,Integer>();
+	// Document metadata stored as <Itemname, HashMap<Documentname, metadata>
+	private HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
+	// Keeps track of names of documents <itemname, ArrayList<documentname>
+	private HashMap<String, ArrayList<String>> docNameMap = new HashMap<String, ArrayList<String>>();
+	// List of files to be uploaded as documents <Itemname, List<filenameofdocument>>
+	private HashMap<String, List<File>> itemFileList = new HashMap<String, List<File>>();
+	// Adds JSON files in collection to list of annotations to be uploaded
+	private HashMap<String, File> annotationFileList = new HashMap<String, File>();
+	// Stores searchable metadata
+	private ArrayList<String> searchedMeta;
+	// Maps file extension types
+	private Map<String, String> fileExtList;
 	// Case insensitive map for meta import
-	Map<String, String> META_MAP = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+	private Map<String, String> META_MAP = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 	// Hashmap for imported metadata
-	static HashMap<String, JSONObject> importedMetadata = new HashMap<String, JSONObject>();
-	ArrayList<String> itemNameList = new ArrayList<String>();
-	JFrame frame;
-	private JTextField textField;
-	AutoCompleteDecorator decorator;
-	// Metadata type
-	JRadioButton documentMeta, reqMeta, itemMeta;
-	// Update all/individual
-	JRadioButton radioIndividual, radioAll;
-	JTextArea reqJson, upAllJson;
-	private JComboBox comboBox, itemMetaCombo, docMetaCombo;
-	int textAreaNo = 1;
-	int updateAreaNo = 1;
-	BufferedReader br = null;
-	String[] values;
-	JScrollPane scrollBar1, scrollBar4, scrollTable1, scrollTable2;
-	ArrayList<String> searchedMeta;
-	Map<String, String> fileExtList;
+	private static HashMap<String, JSONObject> importedMetadata = new HashMap<String, JSONObject>();
+	private ArrayList<String> itemNameList = new ArrayList<String>();
 	//General Metadata
-	JSONObject graph_v = new JSONObject();
+	private JSONObject graph_v = new JSONObject();
 	//Context and details
-	JSONObject context = new JSONObject();
+	private JSONObject context = new JSONObject();
+	//Metadata for collection
+	private JSONObject collectionMetadata = new JSONObject();
+	// Metadata for context
+	private JSONObject contextMetadata = new JSONObject();
+	public JFrame frame;
+	private JTextField textFieldMeta;
+	private AutoCompleteDecorator decorator;
+	// Metadata type
+	private JRadioButton documentMeta, itemMeta;
+	// Update all/individual
+	private JRadioButton radioIndividual, radioAll;
+	private JTextArea reqJson, upAllJson;
+	private JComboBox comboBoxMetadata, itemMetaCombo, docMetaCombo;
+	private int textAreaNo = 1;
+	private int updateAreaNo = 1;
+	private BufferedReader br = null;
+	private String[] values;
+	private JScrollPane scrollTable1, scrollTable2;
+
+
 	//Table related 
 	private String[] colNames = { "Metadata type", "Metadata" };
 	private DefaultTableModel model = new DefaultTableModel(colNames, 0);
 	private DefaultTableModel modelAll = new DefaultTableModel(colNames, 0);
 	private JTable table = new JTable(model);
 	private JTable tableAll = new JTable(modelAll);
-	JSONObject collectionMetadata = new JSONObject();
-	String itemID;
-	String metadataPath = null;
+	private String itemID;
+	private String metadataPath = null;
 
 	/**
 	 * Create the application.
@@ -132,7 +142,7 @@ public class MetadataBuilder {
 	}
 
 	// Search through array for relevant metadata name
-	public static ArrayList<String> metadataSearch(String[] values, String q){
+	private static ArrayList<String> metadataSearch(String[] values, String q){
 		ArrayList<String> ar = new ArrayList<String>();
 		System.out.println("hello" + q);
 		for (String s: values) {           
@@ -145,6 +155,7 @@ public class MetadataBuilder {
 	}
 
 	// Function acquired from stackoverflow for convenience
+	//Converts a string seperated by commas (i.e. csv data) to a map
 	public static Map<String, String> strtoHash (String value){
 		value = value.substring(1, value.length()-1);          
 		String[] keyValuePairs = value.split(",");             
@@ -176,7 +187,7 @@ public class MetadataBuilder {
 		this.recItemMetadata = recItemMetadata;
 		this.recDocMetadata = recDocMetadata;
 		System.out.println(collectionMD);
-
+		contextMetadata = InitializeMetadata.initContext(collectionDetails.get("metadataField"));
 		// Get collection metadata
 		//		if (collectionMD == true) {
 		//			try{
@@ -188,7 +199,7 @@ public class MetadataBuilder {
 		//		}
 
 		if (generateColMD == true){
-			collectionMetadata = InitializeMetadata.initCollection();
+			collectionMetadata = InitializeMetadata.initCollection(collectionDetails.get("metadataField"));
 			System.out.println(collectionMetadata);
 		}
 		// Hash map for unknown file extensions
@@ -206,53 +217,6 @@ public class MetadataBuilder {
 		if (itemMD) {
 			getItemMeta(collectionDetails.get("collectionName"), key);
 		}
-		//If option set to have new items/documents is true
-//		if (newItem) {
-//			//Get sub-directories
-//			List<File> subDirs = CollectionUploadGeneral.getDirs(path);
-//			// Get the extensions to be used when scanning for metadata
-//			String[] extensionsToScan = metadataMapping.get("extensions").toString().split(",");
-//			for (File subDir: subDirs){
-//				HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
-//				ArrayList<String> docNameList = new ArrayList<String>();
-//				int first = 1;
-//				// Set Item name to name of subDirectory
-//				String docID = subDir.getName();
-//				if (!itemNameList.contains(docID)) {
-//					itemNameList.add(docID);
-//				}
-//				//Get all files from sub-directories
-//				List<File> filesList = CollectionUploadGeneral.listFiles(subDir.toString());
-//				itemFileList.put(docID, filesList);
-//				for(File file: filesList){
-//
-//					//Need first file metadata for item creation so take from here and mark
-//					//if its the first iteration or not
-//					float fileBytes = file.length();
-//					String docName = file.getName();
-//					docNameList.add(docName);
-//					String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
-//					if (UploadConstants.EXT_MAP.get(fileExt ) == null) {
-//						fileExtList.put(fileExt, "Other");
-//					}
-//					//Populating metadata on ITEM level 
-//
-//					System.out.println(recItemMetadata);
-//					docs.put(docName, InitializeMetadata.initRec(docID, docName, 
-//							fileBytes, fileExt));
-//					if (!recItemMetadata.containsKey(docID))
-//					{
-//						recItemStatus.put(docID, 2);
-//						recItemMetadata.put(docID, InitializeMetadata.initItem(docID));
-//						//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
-//					}
-//				}
-//				if(!recDocMetadata.containsKey(docID)){
-//					recDocMetadata.put(docID, docs);
-//				}
-//				docNameMap.put(docID, docNameList);
-//			}
-//		}
 		// Read in files based on document filenames
 		// NOTE: try and add document metadata to item, if fails, create the item
 		if (newItem) {
@@ -261,12 +225,10 @@ public class MetadataBuilder {
 			listf(path, files);
 			// Get the extensions to be used when scanning for metadata
 			String[] extensionsToScan = metadataMapping.get("extensions").toString().split(",");
-			
+
 			String delimeter = metadataMapping.get("delim").toString();
 			for (File file: files){
 
-//				HashMap<String, JSONObject> docs = new HashMap<String, JSONObject>();
-//				ArrayList<String> docNameList = new ArrayList<String>();
 				int first = 1;
 
 				//Define check variable for if metadata has been added from filename or not
@@ -287,17 +249,17 @@ public class MetadataBuilder {
 				}
 				if ( (Boolean) metadataMapping.get("useThird")) {
 					itemID = itemID + delimeter + splitDoc[2];
-					}
+				}
 				if ( (Boolean) metadataMapping.get("useForth")) {
 					itemID = itemID + delimeter + splitDoc[3];
-					}
+				}
 				if (!itemNameList.contains(itemID)) {
 					itemNameList.add(itemID);
 				}
 				// extent of file in bytes
 				float fileBytes = file.length();
 				// add name of document to list
-//				docNameList.add(docName);
+				//				docNameList.add(docName);
 				// get file extension of document
 				String fileExt = "." + FilenameUtils.getExtension(file.getAbsolutePath());
 				// check if document extension is in list of known extensions
@@ -306,72 +268,83 @@ public class MetadataBuilder {
 				}
 
 				System.out.println(recItemMetadata);
-				// generate document metadata to be added to hashmap after loop
-//				docs.put(docName, InitializeMetadata.initRec(itemID, docName, 
-//						fileBytes, fileExt));
-				// Prepare metadata from file if necessary
-				
-				
+
 				//Check if file is JSON annotation file
 				if ((FilenameUtils.getExtension(file.getAbsolutePath()).equals("json"))) {
 					annotationFileList.put(itemID, file);
 				} else {
-				//Populating metadata on ITEM level 
-				System.out.println("contains id?:" + !recItemMetadata.containsKey(itemID) + " correct ext?:" + Arrays.asList(extensionsToScan).contains(fileExt) );
-				if (!recItemMetadata.containsKey(itemID) && Arrays.asList(extensionsToScan).contains(fileExt.substring(1)))
-				{
-					//Add metadata from filename
-					recItemStatus.put(itemID, 2);
-					JSONObject itemMetaJSON = InitializeMetadata.initItem(itemID);
-					String firstMeta = ((JSONObject) metadataMapping.get("mapping")).get("first").toString();
-					String secondMeta = ((JSONObject) metadataMapping.get("mapping")).get("second").toString();
-					String thirdMeta = ((JSONObject) metadataMapping.get("mapping")).get("third").toString();
-					String fourthMeta = ((JSONObject) metadataMapping.get("mapping")).get("forth").toString();
-					if (!(firstMeta.equals(""))){
-						itemMetaJSON.put(firstMeta, splitDoc[0]);
+					//Populating metadata on ITEM level 
+					System.out.println("contains id?:" + !recItemMetadata.containsKey(itemID) + " correct ext?:" + Arrays.asList(extensionsToScan).contains(fileExt) );
+					if (!recItemMetadata.containsKey(itemID) && Arrays.asList(extensionsToScan).contains(fileExt.substring(1)))
+					{
+						//Add metadata from filename
+						recItemStatus.put(itemID, 2);
+						JSONObject itemMetaJSON = InitializeMetadata.initItem(itemID);
+						String firstMeta = ((JSONObject) metadataMapping.get("mapping")).get("first").toString();
+						String secondMeta = ((JSONObject) metadataMapping.get("mapping")).get("second").toString();
+						String thirdMeta = ((JSONObject) metadataMapping.get("mapping")).get("third").toString();
+						String fourthMeta = ((JSONObject) metadataMapping.get("mapping")).get("forth").toString();
+						if (!(firstMeta.equals(""))){
+							String[] multipleUse = firstMeta.split(",");
+							for (String metaTerm: multipleUse){
+								itemMetaJSON.put(metaTerm, splitDoc[0]);
+							}
+
+						}
+						if (!(secondMeta.equals(""))){
+							String[] multipleUse = firstMeta.split(",");
+							for (String metaTerm: multipleUse){
+								itemMetaJSON.put(metaTerm, splitDoc[1]);
+							}
+
+						}
+						if (!(thirdMeta.equals(""))){
+							String[] multipleUse = firstMeta.split(",");
+							for (String metaTerm: multipleUse){
+								itemMetaJSON.put(metaTerm, splitDoc[2]);
+							}
+
+						}
+						if (!(fourthMeta.equals(""))){
+							String[] multipleUse = firstMeta.split(",");
+							for (String metaTerm: multipleUse){
+								itemMetaJSON.put(metaTerm, splitDoc[3]);
+							}
+
+						}
+						recItemMetadata.put(itemID, itemMetaJSON);
+						System.out.println("made it!" + recItemMetadata.toString());
+						//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
 					}
-					if (!(secondMeta.equals(""))){
-						itemMetaJSON.put(secondMeta, splitDoc[1]);
+					// Check if the document metadata contains the item and add it + the doc metadata if it doesnt
+					if (recDocMetadata.containsKey(itemID)){
+						recDocMetadata.get(itemID).put(docName, InitializeMetadata.initRec(itemID, docName, 
+								fileBytes, fileExt));
+					} else {
+						HashMap<String, JSONObject> innerJSON = new HashMap<String, JSONObject>();
+						innerJSON.put(docName, InitializeMetadata.initRec(itemID, docName, 
+								fileBytes, fileExt));
+						recDocMetadata.put(itemID, innerJSON);
 					}
-					if (!(thirdMeta.equals(""))){
-						itemMetaJSON.put(thirdMeta, splitDoc[2]);
+					// Add document name to document name map for combobox
+					if (docNameMap.containsKey(itemID)){
+						docNameMap.get(itemID).add(docName);
+					} else {
+						ArrayList<String> innerString = new ArrayList<String>();
+						innerString.add(docName);
+						docNameMap.put(itemID, innerString);
 					}
-					if (!(fourthMeta.equals(""))){
-						itemMetaJSON.put(fourthMeta, splitDoc[2]);
+					// Keep track of file for documents
+					if (itemFileList.containsKey(itemID)){
+						itemFileList.get(itemID).add(file);
+					} else {
+						ArrayList<File> innerFile = new ArrayList<File>();
+						innerFile.add(file);
+						itemFileList.put(itemID, innerFile);
 					}
-					recItemMetadata.put(itemID, itemMetaJSON);
-					System.out.println("made it!" + recItemMetadata.toString());
-					//					recDocMetadata.put(docID, InitializeMetadata.initItem(docID));
 				}
-				// Check if the document metadata contains the item and add it + the doc metadata if it doesnt
-				if (recDocMetadata.containsKey(itemID)){
-					recDocMetadata.get(itemID).put(docName, InitializeMetadata.initRec(itemID, docName, 
-						fileBytes, fileExt));
-				} else {
-					HashMap<String, JSONObject> innerJSON = new HashMap<String, JSONObject>();
-					innerJSON.put(docName, InitializeMetadata.initRec(itemID, docName, 
-						fileBytes, fileExt));
-					recDocMetadata.put(itemID, innerJSON);
-				}
-				// Add document name to document name map for combobox
-				if (docNameMap.containsKey(itemID)){
-					docNameMap.get(itemID).add(docName);
-				} else {
-					ArrayList<String> innerString = new ArrayList<String>();
-					innerString.add(docName);
-					docNameMap.put(itemID, innerString);
-				}
-				// Keep track of file for documents
-				if (itemFileList.containsKey(itemID)){
-					itemFileList.get(itemID).add(file);
-				} else {
-					ArrayList<File> innerFile = new ArrayList<File>();
-					innerFile.add(file);
-					itemFileList.put(itemID, innerFile);
-				}
+
 			}
-				
-		}
 			// Check if metadata excel file exists and import
 			if (metadataPath != null) {
 				ReadSpreadsheet.readMeta(metadataPath, 
@@ -390,7 +363,7 @@ public class MetadataBuilder {
 					}
 				}
 			}
-	}
+		}
 
 		System.out.println(fileExtList);
 
@@ -407,17 +380,14 @@ public class MetadataBuilder {
 		// ButtonGroup for metadata type
 
 		documentMeta  = new JRadioButton("Document Metadata");
-		reqMeta  = new JRadioButton("File Extensions");
 
 		ButtonGroup operation = new ButtonGroup();
-		operation.add(reqMeta);
 		operation.add(documentMeta);
-		reqMeta.setSelected(true);
+
 
 		JPanel operPanel = new JPanel();
 		Border operBorder = BorderFactory.createTitledBorder("Operation");
 		operPanel.setBorder(operBorder);
-		operPanel.add(reqMeta);
 
 		JRadioButton rdbtnCollectionMetadata = new JRadioButton("Collection Metadata");
 		operPanel.add(rdbtnCollectionMetadata);
@@ -463,8 +433,6 @@ public class MetadataBuilder {
 					lblAlveoDocument.setVisible(true);
 					lblAlveoItem.setVisible(true);
 					textAreaNo = 3;
-					scrollBar1.setVisible(false);
-					//	                scrollBar3.setVisible(true);
 					itemMetaCombo.setVisible(true);
 					docMetaCombo.setVisible(true);
 				}
@@ -499,9 +467,9 @@ public class MetadataBuilder {
 			line = br.readLine();
 			values = line.split(",");
 			Arrays.sort(values);
-			comboBox = new JComboBox(new DefaultComboBoxModel(values));
-			comboBox.setEditable(true);
-			comboBox.setBounds(34,50,281,30);
+			comboBoxMetadata = new JComboBox(new DefaultComboBoxModel(values));
+			comboBoxMetadata.setEditable(true);
+			comboBoxMetadata.setBounds(34,50,281,30);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -510,11 +478,11 @@ public class MetadataBuilder {
 
 		// Create an ActionListener for the JComboBox component.
 		//
-		comboBox.addActionListener(new ActionListener() {
+		comboBoxMetadata.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent event) {
 
-				JComboBox comboBox = (JComboBox) event.getSource();
-				Object selected = comboBox.getSelectedItem();
+				JComboBox comboBoxMetadata = (JComboBox) event.getSource();
+				Object selected = comboBoxMetadata.getSelectedItem();
 				System.out.println("Selected Item  = " + selected);
 				String command = event.getActionCommand();
 				System.out.println("Action Command = " + command);
@@ -615,10 +583,10 @@ public class MetadataBuilder {
 
 
 		// Text field for adding metadata info
-		textField = new JTextField();
-		textField.setFont(font1);
-		textField.setBounds(420, 50, 271, 30);
-		textField.setColumns(20);
+		textFieldMeta = new JTextField();
+		textFieldMeta.setFont(font1);
+		textFieldMeta.setBounds(420, 50, 271, 30);
+		textFieldMeta.setColumns(20);
 
 		// Button to add metadata
 		JButton btnAddMeta = new JButton("Add");
@@ -663,10 +631,16 @@ public class MetadataBuilder {
 								recItemStatus.put(key, 1);
 							}
 						}
-						// Update collection
-					}
+						
+					} // Update context
+					 else if (textAreaNo == 5){
+							System.out.println("Update context");
+							contextMetadata = getTableData(table);
+						}
+					// Update collection
 				} else if (textAreaNo == 4){
 					collectionMetadata = getTableData(table);
+
 				}
 
 			}
@@ -691,7 +665,6 @@ public class MetadataBuilder {
 		JButton btnContinue = new JButton("Continue");
 		btnContinue.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-
 				WindowExportUpload windowUpload = new WindowExportUpload(path, 
 						collectionDetails, 
 						key, 
@@ -704,7 +677,8 @@ public class MetadataBuilder {
 						collectionMD, 
 						generateColMD,
 						collectionMetadata,
-						annotationFileList);
+						annotationFileList,
+						contextMetadata);
 				windowUpload.frame.setVisible(true);
 				// Listener to get built Metadata
 
@@ -721,11 +695,11 @@ public class MetadataBuilder {
 		JButton btnSearch = new JButton("Search");
 		btnSearch.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				String selected = comboBox.getSelectedItem().toString();
+				String selected = comboBoxMetadata.getSelectedItem().toString();
 				searchedMeta = metadataSearch(values,selected.toString());
 				System.out.println(searchedMeta.toArray());
 				DefaultComboBoxModel model = new DefaultComboBoxModel( searchedMeta.toArray());
-				comboBox.setModel( model );
+				comboBoxMetadata.setModel( model );
 
 			}
 
@@ -754,30 +728,11 @@ public class MetadataBuilder {
 		scrollTable2 = new JScrollPane(tableAll);
 		scrollTable2.setBounds(268, 369, 400, 200);
 
-		//TextAreas for Metadata
-
-		//Required
-		reqJson = new JTextArea();
-		reqJson.setText(fileExtList.toString());
-		reqJson.setLineWrap(true);
-		scrollBar1 = new JScrollPane(reqJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollBar1.setBounds(300, 100, 400, 250);
-
-		//Update all
-		upAllJson = new JTextArea();
-		upAllJson.setText(fileExtList.toString());
-		upAllJson.setLineWrap(true);
-		scrollBar4 = new JScrollPane(upAllJson, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
-				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		scrollBar4.setBounds(300, 370, 400, 200);
-
-
 
 		//Button to add metadata to box
 		btnAddMeta.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				String[] array = {(String) comboBox.getSelectedItem(), (String) textField.getText()};
+				String[] array = {(String) comboBoxMetadata.getSelectedItem(), (String) textFieldMeta.getText()};
 				if (updateAreaNo ==1) {
 					if (table.getSelectedRow() == -1) {
 						model.addRow(array);
@@ -796,28 +751,6 @@ public class MetadataBuilder {
 
 		});
 
-
-
-		// Listeners for radio buttons
-		reqMeta.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				if(reqMeta.isSelected()) {
-					textAreaNo = 1;
-					lblAlveoDocument.setVisible(false);
-					lblAlveoItem.setVisible(false);
-					scrollBar1.setVisible(true);
-					//					scrollBar2.setVisible(false);
-					//					scrollBar3.setVisible(false);
-					itemMetaCombo.setVisible(false);
-					docMetaCombo.setVisible(false);
-				}
-			}
-
-		});
-
 		documentMeta.addActionListener(new ActionListener() {
 
 			@Override
@@ -827,7 +760,6 @@ public class MetadataBuilder {
 					textAreaNo = 2;
 					lblAlveoDocument.setVisible(true);
 					lblAlveoItem.setVisible(true);
-					scrollBar1.setVisible(false);
 					itemMetaCombo.setVisible(true);
 					docMetaCombo.setVisible(true);
 				}
@@ -863,10 +795,10 @@ public class MetadataBuilder {
 		frame.getContentPane().add(scrollTable1);
 		frame.getContentPane().add(scrollTable2);
 		//		frame.getContentPane().add(scrollBar4);
-		frame.getContentPane().add(comboBox);
+		frame.getContentPane().add(comboBoxMetadata);
 		frame.getContentPane().add(itemMetaCombo);
 		frame.getContentPane().add(docMetaCombo);
-		frame.getContentPane().add(textField);
+		frame.getContentPane().add(textFieldMeta);
 		frame.getContentPane().add(btnAddMeta);
 		frame.getContentPane().add(btnDelete);
 		frame.getContentPane().add(btnUpdate);
@@ -877,6 +809,24 @@ public class MetadataBuilder {
 		frame.getContentPane().add(lblAlveoDocument);
 		frame.getContentPane().add(lblAlveoItem);
 		frame.getContentPane().add(operPanel);
+
+		JRadioButton rdbtnContext = new JRadioButton("Context");
+		operPanel.add(rdbtnContext);
+		operation.add(rdbtnContext);
+		rdbtnContext.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				if(rdbtnContext.isSelected()) {
+					textAreaNo = 5;
+					jsonToTable(JSONObject.fromObject(contextMetadata));
+					table.repaint();
+				}
+
+			}
+
+		});
 		frame.getContentPane().add(operPanelUpload);
 		frame.setVisible(true);
 	}
@@ -884,7 +834,7 @@ public class MetadataBuilder {
 	//Table related auxillary functions
 
 	// Get data from table to JSONObject
-	//REWRITE THIS CODE
+	// Based off code from stackoverflow
 	public static JSONObject getTableData (JTable table) {
 		JSONObject dataFromTable = new JSONObject();
 		DefaultTableModel dtm = (DefaultTableModel) table.getModel();
@@ -984,7 +934,7 @@ public class MetadataBuilder {
 	// Get metadata from Items
 	public void getItemMeta(String collectionName, String key) {
 		try {
-			JSONObject itemMetadata = requestToAlveo(key, UploadConstants.CATALOG_URL+ "search?metadata=collection_name:" + collectionName);
+			JSONObject itemMetadata = RequestHelper.requestToAlveo(key, UploadConstants.CATALOG_URL+ "search?metadata=collection_name:" + collectionName);
 
 			String itemNamestemp1 = itemMetadata.get("items").toString();
 			String itemNamestemp2 = itemNamestemp1.substring(1, itemNamestemp1.length() - 1);
@@ -992,7 +942,7 @@ public class MetadataBuilder {
 			for (String temp : itemNames) {
 				try {
 					ArrayList<String> docNameList = new ArrayList<String>();
-					JSONObject request = requestToAlveo(key, temp.substring(1, temp.length()-1));
+					JSONObject request = RequestHelper.requestToAlveo(key, temp.substring(1, temp.length()-1));
 					JSONObject temp1 = (JSONObject) request.get("alveo:metadata");
 					String itemName = temp1.get("dc:identifier").toString();
 					recItemMetadata.put(itemName, temp1);
@@ -1017,55 +967,23 @@ public class MetadataBuilder {
 		}
 	}
 
-	// make JSON request to Alveo server
-	public static JSONObject requestToAlveo(String key, String appendToUrl) throws IOException {
-		JSONObject tmpJSON =  new JSONObject();
-		String serviceURL =	appendToUrl;
-		URL myURL = new URL(serviceURL);
-		HttpURLConnection conn = (HttpURLConnection)myURL.openConnection();
-		conn.setRequestMethod("GET");
-		conn.setRequestProperty("Content-Type", "application/json");
-		conn.setRequestProperty("X-API-KEY", key);
-		conn.setRequestProperty("Accept", "application/json");
-		conn.setUseCaches(false);
-		conn.setDoInput(true);
-		conn.setDoOutput(true);
-		conn.connect();
-		JSONObject metadata = readResponse(conn);
-		return metadata;
-	}
-
-
-	public static JSONObject readResponse(HttpURLConnection conn) throws IOException {
-		BufferedReader in = new BufferedReader(
-				new InputStreamReader(conn.getInputStream()));
-		String output;
-		StringBuffer response = new StringBuffer();
-		while ((output = in.readLine()) != null) {
-			response.append(output);
-		}
-		in.close();
-		System.out.println(response.toString());
-		JSONObject JSONresponse = JSONObject.fromObject(response.toString());
-		System.out.println(JSONresponse.toString());
-		return JSONresponse;
-	}
-	
+	// Get all files from directory and find metadata
+	// based off code from stackoverflow
 	public void listf(String directoryName, ArrayList<File> files) {
-	    File directory = new File(directoryName);
+		File directory = new File(directoryName);
 
-	    // get all the files from a directory
-	    File[] fList = directory.listFiles();
-	    for (File file : fList) {
-	    	// look for metadata file
-	    	if (file.getName().equals("metadata.xlsx")){
-	    		metadataPath = file.getAbsolutePath();
-	    	}else 
-	        if (file.isFile()) {
-	            files.add(file);
-	        } else if (file.isDirectory()) {
-	            listf(file.getAbsolutePath(), files);
-	        }
-	    }
+		// get all the files from a directory
+		File[] fList = directory.listFiles();
+		for (File file : fList) {
+			// look for metadata file
+			if (file.getName().equals("metadata.xlsx")){
+				metadataPath = file.getAbsolutePath();
+			}else 
+				if (file.isFile()) {
+					files.add(file);
+				} else if (file.isDirectory()) {
+					listf(file.getAbsolutePath(), files);
+				}
+		}
 	}
 }

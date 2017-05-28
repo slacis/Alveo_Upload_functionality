@@ -135,16 +135,20 @@ public class ReadSpreadsheet {
 								}
 								itemName = false;
 //								System.out.println(itemID);
-							} else {
+							} else 
+								if (currentCell.getCellTypeEnum() == CellType.STRING) {
 								System.out.println("name2" + currentCell.getStringCellValue());
 								tempJSON.put(metaMapping.get(x), currentCell.getStringCellValue());
-
-
+								x++;
+								 
+							} else if (currentCell.getCellTypeEnum() == CellType.NUMERIC) {
+								System.out.println("name2" + String.valueOf(currentCell.getNumericCellValue()));
+								tempJSON.put(metaMapping.get(x), String.valueOf(currentCell.getNumericCellValue()));
 								x++;
 							}
 						}
 						//						System.out.print(currentCell.getStringCellValue() + "--");
-						temp = currentCell.getStringCellValue(); 
+//						temp = currentCell.getStringCellValue(); 
 
 //					}
 

@@ -13,7 +13,7 @@ import net.sf.json.JSONObject;
 
 public class MetadataGeneral {
 	
-	public static JSONArray createMetadata(JSONObject graph_v){
+	public static JSONArray createMetadata(JSONObject graph_v, String prefix){
 
 		
 		JSONArray docsMetadata = new JSONArray();			
@@ -33,7 +33,7 @@ public class MetadataGeneral {
 		context.element("dcterms" , "http://purl.org/dc/terms/");
 		context.element("foaf" , "http://xmlns.com/foaf/0.1/");
 		context.element("hcsvlab" , "http://hcsvlab.org/vocabulary/");	
-		context.element("mbep" , "http://hcsvlab.org/vocabulary");	
+		context.element(prefix , "http://purl.org/dc/terms/");	
 		docMetadata_v.element("@context", context.toString());			
 			
 //		graph_v.element("@id" , docID);

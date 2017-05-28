@@ -63,13 +63,13 @@ public class WindowConvert {
 		frame.getContentPane().setLayout(null);
 		
 		JLabel lblConvertFrom = new JLabel("Convert from:");
-		lblConvertFrom.setBounds(59, 26, 110, 15);
+		lblConvertFrom.setBounds(94, 47, 110, 15);
 		frame.getContentPane().add(lblConvertFrom);
 		
 		JComboBox comboBox = new JComboBox();
 		// Can add to this list if new functions are added
 		comboBox.setModel(new DefaultComboBoxModel(new String[] {"BioC"}));
-		comboBox.setBounds(59, 53, 226, 24);
+		comboBox.setBounds(94, 74, 226, 24);
 		frame.getContentPane().add(comboBox);
 		
 		JButton btnSelectFile = new JButton("Select File");

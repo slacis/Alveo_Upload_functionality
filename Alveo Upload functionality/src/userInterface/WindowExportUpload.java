@@ -44,12 +44,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 public class WindowExportUpload {
 
 	JFrame frame;
-	HashMap<String, JSONObject> recItemMetadata = new HashMap<String,JSONObject>();
-	HashMap<String, HashMap<String, JSONObject>> recDocMetadata = new HashMap<String,HashMap<String,JSONObject>>();
-	private String path = null;
-	private String absolupath;
-	private String filename;
-
 
 	/**
 	 * Create the application.
@@ -67,7 +61,8 @@ public class WindowExportUpload {
 			Boolean collectionMD,
 			Boolean generateColMD,
 			JSONObject collectionMetadata,
-			HashMap<String, File> annotationFileList) {
+			HashMap<String, File> annotationFileList,
+			JSONObject contextMetadata) {
 
 		initialize(path, 
 				collectionDetails, 
@@ -81,8 +76,8 @@ public class WindowExportUpload {
 				collectionMD, 
 				generateColMD,
 				collectionMetadata,
-				annotationFileList
-				);
+				annotationFileList,
+				contextMetadata);
 	}
 
 	/**
@@ -101,22 +96,12 @@ public class WindowExportUpload {
 			Boolean collectionMD,
 			Boolean generateColMD,
 			JSONObject collectionMetadata,
-			HashMap<String, File> annotationFileList) {
+			HashMap<String, File> annotationFileList,
+			JSONObject contextMetadata) {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 400, 400);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
-
-		// Open Metadata Editor button
-		JButton btnExport = new JButton("Export Metadata");
-		btnExport.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				WindowUpdateCollection updateWindow= new WindowUpdateCollection(key);
-				updateWindow.frame.setVisible(true);
-			}
-		});
-		btnExport.setBounds(67, 157, 262, 36);
-		frame.getContentPane().add(btnExport);
 
 		JButton btnMetadataEditor = new JButton("Metadata Editor");
 		btnMetadataEditor.addActionListener(new ActionListener() {
@@ -129,7 +114,7 @@ public class WindowExportUpload {
 		frame.getContentPane().add(btnMetadataEditor);
 
 		JButton btnUpload = new JButton("Update/Upload");
-		btnUpload.setBounds(68, 206, 262, 36);
+		btnUpload.setBounds(67, 159, 262, 36);
 		btnUpload.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				int response;
@@ -147,6 +132,11 @@ public class WindowExportUpload {
 								, "InfoBox: " + "Error Message" + e.getMessage(), JOptionPane.INFORMATION_MESSAGE);
 					}
 				}
+				// If we will delete all items in collection
+				if (collectionDetails.get("itemDelete").equals("true")){
+					deleteItems(key, collectionDetails.get("collectionName") );
+				}
+				// If there is item metadata to update
 				if (itemMD) {
 					try {
 						updateItems(key, 
@@ -158,6 +148,7 @@ public class WindowExportUpload {
 						e.printStackTrace();
 					}
 				}
+				// If there is collection metadata to update
 				if (collectionMD){
 					try {
 						updateCollection(key, collectionMetadata, collectionDetails);
@@ -166,6 +157,7 @@ public class WindowExportUpload {
 						e.printStackTrace();
 					}
 				}
+				// If we are creating new items/adding new documents
 				if (newItem){
 					String collectionName = collectionDetails.get("collectionName");
 					for (String itemKey : recItemMetadata.keySet()) {
@@ -174,8 +166,8 @@ public class WindowExportUpload {
 							File firstFile = itemFileList.get(itemKey).get(0);
 							JSONObject ausnc_doc_v = 
 									recDocMetadata.get(itemKey).get(firstFile.getName());
-							response = createItemFile(key, collectionName, 
-									recItemMetadata.get(itemKey), ausnc_doc_v, firstFile);
+							response = createItem(key, collectionName, 
+									recItemMetadata.get(itemKey), collectionDetails.get("metadataField"), contextMetadata);
 //							itemFileList.get(itemKey).remove(0);
 							System.out.println(response);
 							//Upload documents
@@ -184,7 +176,8 @@ public class WindowExportUpload {
 										collectionName, 
 										itemKey,
 										fileToUpload,
-										recDocMetadata.get(itemKey).get(fileToUpload.getName()));
+										recDocMetadata.get(itemKey).get(fileToUpload.getName()),
+										collectionDetails.get("metadataField"));
 								System.out.println(response);
 
 							}
@@ -212,6 +205,7 @@ public class WindowExportUpload {
 	public int createCollection(String key, JSONObject collectionMetadata, HashMap<String, String> collectionDetails) throws IOException {
 		try {
 			JSONObject metadatad = new JSONObject();
+			collectionMetadata.put("@context", collectionDetails.get("context"));
 			metadatad.put("collection_metadata", collectionMetadata);
 			String url = UploadConstants.CATALOG_URL.substring(0, UploadConstants.CATALOG_URL.length()-1 )+ 
 					"?name=" + collectionDetails.get("collectionName")
@@ -257,7 +251,8 @@ public class WindowExportUpload {
 					if (recItemStatus.get(item) == 1) {
 						JSONObject metadatad = new JSONObject();
 						JSONObject tempItem = recItemMetadata.get(item);
-						tempItem.put("@context", InitializeMetadata.initContext());
+//						tempItem.put("@context", InitializeMetadata.initContext(collectionDetails.get("metadataField")));
+						tempItem.put("@context", collectionDetails.get("context"));
 						metadatad.put("metadata", tempItem);
 						System.out.println(metadatad.toString());
 						String url = UploadConstants.CATALOG_URL 
@@ -332,15 +327,42 @@ public class WindowExportUpload {
 		}
 		return 0; 
 	}
+	
+	//Finalize item metadata
+	
+	public static JSONArray createMetadata(JSONObject graph_v, JSONObject context, String prefix){
 
-	public int createItem(String key, String collectionName, JSONObject itemMetadata){
+		
+		JSONArray docsMetadata = new JSONArray();			
+		JSONObject docMetadata = new JSONObject();
+		JSONObject docMetadata_v = new JSONObject();		
+		JSONArray graph = new JSONArray();
+		JSONArray ausnc_doc = new JSONArray();
+		docMetadata_v.element("@context", context.toString());			
+		graph.add(graph_v.toString());
+		docMetadata_v.element("@graph", graph.toString());
+		docMetadata.element("metadata", docMetadata_v.toString());
+		docsMetadata.add(docMetadata.toString());
+			
+		return docsMetadata;	
+	}
+
+	public int createItem(String key, String collectionName, JSONObject itemMetadata, String metadataField, JSONObject contextMetadata){
 		//Create item
 		try{
 			HttpClient httpclient = new HttpClient();
 			PostMethod filePost = new PostMethod( UploadConstants.CATALOG_URL +collectionName );
+			
+//			System.out.println("context");
+//			JSONArray test = MetadataGeneral.createMetadata( 
+//					itemMetadata, metadataField);
+//			System.out.println("item meta: " + test.toString());
+//			JSONArray test2 = createMetadata( 
+//					itemMetadata, contextMetadata, metadataField);
+//			System.out.println("item meta local: " + test2.toString());
 			Part[] parts = {
-					new StringPart( "items",MetadataGeneral.createMetadata( 
-							itemMetadata)
+					new StringPart( "items", createMetadata( 
+							itemMetadata, contextMetadata, metadataField)
 							.toString()) };
 
 			filePost.setRequestHeader( "X-API-KEY",key);
@@ -383,7 +405,7 @@ public class WindowExportUpload {
 		return 0;
 	}
 	
-	public int createItemFile(String key, String collectionName, JSONObject itemMetadata, JSONObject ausnc_doc_v, File firstFile){
+	public int createItemFile(String key, String collectionName, JSONObject itemMetadata, JSONObject ausnc_doc_v, File firstFile, String metadataField, JSONObject contextMetadata){
 		//Create item
 		try{
 			HttpClient httpclient = new HttpClient();
@@ -391,11 +413,9 @@ public class WindowExportUpload {
 			JSONArray ausnc_doc = new JSONArray();
 			ausnc_doc.add(ausnc_doc_v.toString());
 			itemMetadata.element("ausnc:document", ausnc_doc.toString());			
-			JSONArray itemMeta = MetadataGeneral.createMetadata(itemMetadata);
+			JSONArray itemMeta = createMetadata(itemMetadata, contextMetadata, metadataField);
 			Part[] parts = {new FilePart("file", firstFile),
-					new StringPart( "items",MetadataGeneral.createMetadata( 
-							itemMetadata)
-							.toString()) };
+					new StringPart( "items",itemMeta.toString()) };
 
 			filePost.setRequestHeader( "X-API-KEY",key);
 			filePost.setRequestHeader( "Accept","application/json");
@@ -441,7 +461,8 @@ public class WindowExportUpload {
 			String collectionName, 
 			String itemName,
 			File fileUpload,
-			JSONObject docMetadata
+			JSONObject docMetadata,
+			String metadataField
 			){
 	
 
@@ -454,7 +475,7 @@ public class WindowExportUpload {
 				System.out.println("url of doc upload: " +  url);
 				System.out.println(docMetadata);
 				System.out.println(itemName);
-				docMetadata.put("@context", InitializeMetadata.initContext());
+				docMetadata.put("@context", InitializeMetadata.initContext(metadataField));
 
 
 				Part[] parts = {new FilePart( "file", fileUpload ), new StringPart( "metadata",docMetadata.toString()) };
@@ -480,6 +501,55 @@ public class WindowExportUpload {
 
 
 		}
+		return 0;
+
+	}
+	
+	//Delete all items
+	public int deleteItems(String key, 
+			String collectionName
+			){
+
+		try {
+			JSONObject itemMetadata = RequestHelper.requestToAlveo(key, UploadConstants.CATALOG_URL+ 
+					"search?metadata=collection_name:" + collectionName);
+			String itemNamestemp1 = itemMetadata.get("items").toString();
+			String itemNamestemp2 = itemNamestemp1.substring(1, itemNamestemp1.length() - 1);
+			List<String> itemNames = Arrays.asList(itemNamestemp2.split(","));
+			System.out.println( itemNames.toString());
+			for (String url: itemNames) {
+				System.out.println(url);
+			}
+			for (String url: itemNames) {
+				try {
+					HttpClient httpclient = new HttpClient();
+					DeleteMethod deleteItem = new DeleteMethod( url );
+
+					deleteItem.setRequestHeader( "X-API-KEY",key);
+					deleteItem.setRequestHeader( "Accept","application/json");
+					//			deleteItem.setRequestEntity( new MultipartRequestEntity(deleteItem.getParams()  );
+
+					int response = httpclient.executeMethod( deleteItem );
+					System.out.println( "Response : "+response );
+					System.out.println( deleteItem.getResponseBodyAsString());
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+					continue;
+				}
+			}
+
+		}catch( HttpException e ){
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}catch( IOException e ){
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+
+
+
 		return 0;
 
 	}

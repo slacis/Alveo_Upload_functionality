@@ -47,6 +47,7 @@ public class WindowCreateCollection {
 	private JTextField prefix;
 	HashMap<String, Integer> licenseList = new HashMap<String, Integer>();
 	String privateField;
+	Boolean fileMetadataSet = false;
 
 
 
@@ -67,7 +68,6 @@ public class WindowCreateCollection {
 	private void initialize(String key) {
 		frame = new JFrame();
 		frame.setBounds(100, 100, 400, 400);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 		licenseList.put("AusTalk Terms of Use", 1);
@@ -132,9 +132,9 @@ public class WindowCreateCollection {
 		btnCreateNewCollection.setBounds(64, 302, 262, 36);
 		btnCreateNewCollection.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (path == null){
+				if (path == null || fileMetadataSet == false){
 				//Error message : Null Path 
-				JOptionPane.showMessageDialog(null, "Please select path", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(null, "Please select path and set file metadata", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
 				} else {
 				HashMap<String, String> collectionDetails = new HashMap<String,String>();
 						collectionDetails.put("collectionName",textField_1.getText());
@@ -212,6 +212,7 @@ public class WindowCreateCollection {
 		JButton btnFilenameMetadata = new JButton("Filename Metadata");
 		btnFilenameMetadata.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				fileMetadataSet = true;
 				WindowFileMetadata fileMeta = new WindowFileMetadata();
 				fileMeta.frame.setVisible(true);
 				// Listener to get built Metadata

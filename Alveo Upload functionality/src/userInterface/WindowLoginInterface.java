@@ -33,7 +33,7 @@ import java.awt.Font;
  */
 
 
-public class LoginInterface {
+public class WindowLoginInterface {
 
 	private JFrame frame;
 	private JTextField textField;
@@ -52,20 +52,20 @@ public class LoginInterface {
 					File f = new File("/media/sf_sharedwithvirtual/alveo.config");
 					if(f.exists() && !f.isDirectory()) {
 						String jsonTxt = new String(Files.readAllBytes(Paths.get("/media/sf_sharedwithvirtual/alveo.config")));
-			            System.out.println(jsonTxt);
-			            JSONObject json = (JSONObject) JSONSerializer.toJSON(jsonTxt);     
-			            apiKey = json.getString("apiKey"); 
-			            
+						System.out.println(jsonTxt);
+						JSONObject json = (JSONObject) JSONSerializer.toJSON(jsonTxt);     
+						apiKey = json.getString("apiKey"); 
+
 					}
-//					response = testApiKey(apiKey);
+					//					response = testApiKey(apiKey);
 					// Check API key from config and login if valid (set to 200)
 					if(Integer.valueOf(response) == 0){
-//						SelectFiles window = new SelectFiles(apiKey);
+						//						SelectFiles window = new SelectFiles(apiKey);
 						WindowCollection window = new WindowCollection(apiKey);
 						window.frame.setVisible(true);
 					} else {
-					LoginInterface window = new LoginInterface();
-					window.frame.setVisible(true);
+						WindowLoginInterface window = new WindowLoginInterface();
+						window.frame.setVisible(true);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -77,21 +77,21 @@ public class LoginInterface {
 	/**
 	 * Create the application.
 	 */
-	public LoginInterface() {
+	public WindowLoginInterface() {
 		initialize();
 	}
-	
+
 	//Test API Key
 	public static String testApiKey(String key){
-	String response = "0";
-	
-	try {
-		response = LoginCheck.check(key);
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-	return response;
+		String response = "0";
+
+		try {
+			response = LoginCheck.check(key);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return response;
 	}
 
 	/**
@@ -103,31 +103,31 @@ public class LoginInterface {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
-		
+
 		textField = new JTextField();
 		textField.setBounds(63, 155, 271, 31);
 		frame.getContentPane().add(textField);
 		textField.setColumns(10);
-		
+
 		JButton btnNewButton = new JButton("Login");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
+
 				String key = textField.getText();
 				String response = "0";
 				response = testApiKey(key);
-		
+
 				if(Integer.valueOf(response) == 200){
 					frame.setVisible(false);
-					SelectFiles window = new SelectFiles(key);
+					WindowCollection window = new WindowCollection(key);
 					window.frame.setVisible(true);
 				}else{
-					
+
 					//Error message : Invalid API key 
 					JOptionPane.showMessageDialog(null, "Invalid API key", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
 					textField.setText(null);
 				}
-				
+
 			}
 		});
 		btnNewButton.setFont(new Font("Tahoma", Font.PLAIN, 14));
@@ -137,7 +137,7 @@ public class LoginInterface {
 		});
 		btnNewButton.setBounds(85, 208, 89, 23);
 		frame.getContentPane().add(btnNewButton);
-		
+
 		JButton btnNewButton_1 = new JButton("Cancel");
 		btnNewButton_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -148,7 +148,7 @@ public class LoginInterface {
 		btnNewButton_1.setFont(new Font("Tahoma", Font.PLAIN, 14));
 		btnNewButton_1.setBounds(219, 208, 89, 23);
 		frame.getContentPane().add(btnNewButton_1);
-		
+
 		JLabel lblNewLabel = new JLabel("Please input Alveo API key: ");
 		lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 14));
 		lblNewLabel.setBounds(63, 121, 211, 23);
