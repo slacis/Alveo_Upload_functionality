@@ -283,7 +283,7 @@ public class MetadataBuilder {
 						String firstMeta = ((JSONObject) metadataMapping.get("mapping")).get("first").toString();
 						String secondMeta = ((JSONObject) metadataMapping.get("mapping")).get("second").toString();
 						String thirdMeta = ((JSONObject) metadataMapping.get("mapping")).get("third").toString();
-						String fourthMeta = ((JSONObject) metadataMapping.get("mapping")).get("forth").toString();
+						String forthMeta = ((JSONObject) metadataMapping.get("mapping")).get("forth").toString();
 						if (!(firstMeta.equals(""))){
 							String[] multipleUse = firstMeta.split(",");
 							for (String metaTerm: multipleUse){
@@ -292,21 +292,21 @@ public class MetadataBuilder {
 
 						}
 						if (!(secondMeta.equals(""))){
-							String[] multipleUse = firstMeta.split(",");
+							String[] multipleUse = secondMeta.split(",");
 							for (String metaTerm: multipleUse){
 								itemMetaJSON.put(metaTerm, splitDoc[1]);
 							}
 
 						}
 						if (!(thirdMeta.equals(""))){
-							String[] multipleUse = firstMeta.split(",");
+							String[] multipleUse = thirdMeta.split(",");
 							for (String metaTerm: multipleUse){
 								itemMetaJSON.put(metaTerm, splitDoc[2]);
 							}
 
 						}
-						if (!(fourthMeta.equals(""))){
-							String[] multipleUse = firstMeta.split(",");
+						if (!(forthMeta.equals(""))){
+							String[] multipleUse = forthMeta.split(",");
 							for (String metaTerm: multipleUse){
 								itemMetaJSON.put(metaTerm, splitDoc[3]);
 							}
