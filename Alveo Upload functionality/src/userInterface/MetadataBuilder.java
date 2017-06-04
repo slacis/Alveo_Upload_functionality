@@ -530,7 +530,12 @@ public class MetadataBuilder {
 						//                 System.out.println(recItemMetadata.get(selected).toString());
 					} else if (textAreaNo ==3){
 						//Load into table
+						try {
 						jsonToTable(recItemMetadata.get(selected));
+						} catch (java.lang.NullPointerException e) {
+							JOptionPane.showMessageDialog(null,"No item metadata found. Check readable file extensions"
+									+ "in filename metadata");
+						}
 
 						//                 System.out.println(recItemMetadata.get(selected).toString());
 					}
@@ -794,7 +799,6 @@ public class MetadataBuilder {
 
 		frame.getContentPane().add(scrollTable1);
 		frame.getContentPane().add(scrollTable2);
-		//		frame.getContentPane().add(scrollBar4);
 		frame.getContentPane().add(comboBoxMetadata);
 		frame.getContentPane().add(itemMetaCombo);
 		frame.getContentPane().add(docMetaCombo);
@@ -864,7 +868,6 @@ public class MetadataBuilder {
 		DefaultTableModel dtm = (DefaultTableModel) table.getModel();
 		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
 		int i = 0 ;
-		//	    Object[][] tableData = new Object[nRow][nCol];
 		for (; i < nRow ; i++){
 			if (i+1 < nRow && Character.toLowerCase(dtm.getValueAt(i+1,0).toString().charAt(0)) == '-'  ){
 				System.out.println("i before: " + i);
@@ -885,7 +888,6 @@ public class MetadataBuilder {
 	public static JSONObject getTableDataMulti (DefaultTableModel dtm, int i) {
 		JSONObject tmpJSON =  new JSONObject();
 		int nRow = dtm.getRowCount(), nCol = dtm.getColumnCount();
-		//	    Object[][] tableData = new Object[nRow][nCol];
 		for ( ; i < nRow ; i++){
 			//For multi-layered json
 			if (Character.toLowerCase(dtm.getValueAt(i,0).toString().charAt(0)) == '-' ){
@@ -901,7 +903,6 @@ public class MetadataBuilder {
 	public void jsonToTable (JSONObject tableData) {
 		clearTable();
 		for (Object key : tableData.keySet()) {
-			//based on you key types
 			String keyN = (String) key;
 			System.out.println(keyN);
 			System.out.println(tableData.get(keyN));
@@ -910,7 +911,6 @@ public class MetadataBuilder {
 			if (value instanceof JSONObject) {
 				String[] JSONCont = {keyN,""};
 				model.addRow(JSONCont);
-				System.out.println("value is json!!!!");
 				for (Object keyI : ((JSONObject) value).keySet()) {
 					String valueI = ((JSONObject) value).get(keyI).toString();
 					String[] array = {"-" + keyI.toString(), valueI};

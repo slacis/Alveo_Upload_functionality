@@ -42,7 +42,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 
 public class WindowExportUpload {
-
+	HashMap<String, Integer> uploadResult = new HashMap<String,Integer>();
 	JFrame frame;
 
 	/**
@@ -106,8 +106,7 @@ public class WindowExportUpload {
 		JButton btnMetadataEditor = new JButton("Metadata Editor");
 		btnMetadataEditor.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				WindowCreateCollection createWindow= new WindowCreateCollection(key);
-				createWindow.frame.setVisible(true);
+				frame.setVisible(false);
 			}
 		});
 		btnMetadataEditor.setBounds(67, 104, 262, 36);
@@ -122,10 +121,11 @@ public class WindowExportUpload {
 				if (generateColMD){
 					try {
 						response = createCollection(key, collectionMetadata, collectionDetails);
-						if (response == 200) {
-							JOptionPane.showMessageDialog(null, "Collection created successfuly!", 
-									"InfoBox: ", JOptionPane.INFORMATION_MESSAGE);
-						}
+						uploadResult.put("Create collection", response);
+//						if (response == 200) {
+//							JOptionPane.showMessageDialog(null, "Collection created successfuly!", 
+//									"InfoBox: ", JOptionPane.INFORMATION_MESSAGE);
+//						}
 
 					} catch (IOException e){
 						JOptionPane.showMessageDialog(null, "Problem creating collection"
@@ -133,16 +133,19 @@ public class WindowExportUpload {
 					}
 				}
 				// If we will delete all items in collection
-				if (collectionDetails.get("itemDelete").equals("true")){
-					deleteItems(key, collectionDetails.get("collectionName") );
+				String deleteItems = collectionDetails.get("itemDelete");
+				if (deleteItems != null && deleteItems.equals("true")){
+					response = deleteItems(key, collectionDetails.get("collectionName") );
+							uploadResult.put("Delete existing items", response);;
 				}
 				// If there is item metadata to update
 				if (itemMD) {
 					try {
-						updateItems(key, 
+						response = updateItems(key, 
 								collectionDetails,
 								recItemMetadata,
 								recItemStatus);
+						uploadResult.put("Items updated", response);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -151,7 +154,8 @@ public class WindowExportUpload {
 				// If there is collection metadata to update
 				if (collectionMD){
 					try {
-						updateCollection(key, collectionMetadata, collectionDetails);
+						response = updateCollection(key, collectionMetadata, collectionDetails);
+						uploadResult.put("Collection Updated", response);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -161,6 +165,7 @@ public class WindowExportUpload {
 				if (newItem){
 					String collectionName = collectionDetails.get("collectionName");
 					for (String itemKey : recItemMetadata.keySet()) {
+						try {
 						if (recItemStatus.get(itemKey) == 2){
 							//Create item
 							File firstFile = itemFileList.get(itemKey).get(0);
@@ -168,7 +173,7 @@ public class WindowExportUpload {
 									recDocMetadata.get(itemKey).get(firstFile.getName());
 							response = createItem(key, collectionName, 
 									recItemMetadata.get(itemKey), collectionDetails.get("metadataField"), contextMetadata);
-//							itemFileList.get(itemKey).remove(0);
+							uploadResult.put("Item name: " + itemKey, response);
 							System.out.println(response);
 							//Upload documents
 							for (File fileToUpload: itemFileList.get(itemKey)){
@@ -182,6 +187,9 @@ public class WindowExportUpload {
 
 							}
 						}
+						} catch (java.lang.NullPointerException e) {
+							continue;
+						}
 						// Check if annotations exist and upload them
 						if (annotationFileList.containsKey(itemKey)){
 							try {
@@ -191,9 +199,17 @@ public class WindowExportUpload {
 								e.printStackTrace();
 							}
 						}
+
+						
 					}
 
 				}
+				String resultString = "";
+				for (String name: uploadResult.keySet()){
+					resultString = resultString + name + " - " + "Status Code: "+ uploadResult.get(name) + "\n";
+				}
+				JOptionPane.showMessageDialog(null, "Result: \n" + resultString, 
+						"InfoBox: ", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		frame.getContentPane().add(btnUpload);
