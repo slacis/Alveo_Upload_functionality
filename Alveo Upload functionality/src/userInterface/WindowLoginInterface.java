@@ -49,9 +49,9 @@ public class WindowLoginInterface {
 					String response = "0";
 					String apiKey = null;
 					//Change hard-coded directory on publish
-					File f = new File("/media/sf_sharedwithvirtual/alveo.config");
+					File f = new File("data" + File.separator +  "alveo.config");
 					if(f.exists() && !f.isDirectory()) {
-						String jsonTxt = new String(Files.readAllBytes(Paths.get("/media/sf_sharedwithvirtual/alveo.config")));
+						String jsonTxt = new String(Files.readAllBytes(Paths.get("data" + File.separator +  "alveo.config")));
 						System.out.println(jsonTxt);
 						JSONObject json = (JSONObject) JSONSerializer.toJSON(jsonTxt);     
 						apiKey = json.getString("apiKey"); 

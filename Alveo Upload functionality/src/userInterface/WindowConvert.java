@@ -23,10 +23,10 @@ import javax.xml.stream.XMLStreamException;
 import mapping.BioC2Alveo;
 import mapping.BioC2Json;
 
-/** A upload function GUI class 
+/** Conversion screen
  * 
  *
- * @author Kun He
+ * @author Simon Lacis
  *
  */
 
@@ -58,22 +58,22 @@ public class WindowConvert {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 400, 400);
+		frame.setBounds(100, 100, 500, 500);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 		
 		JLabel lblConvertFrom = new JLabel("Convert from:");
-		lblConvertFrom.setBounds(94, 47, 110, 15);
+		lblConvertFrom.setBounds(163, 79, 110, 15);
 		frame.getContentPane().add(lblConvertFrom);
 		
 		JComboBox comboBox = new JComboBox();
 		// Can add to this list if new functions are added
 		comboBox.setModel(new DefaultComboBoxModel(new String[] {"BioC"}));
-		comboBox.setBounds(94, 74, 226, 24);
+		comboBox.setBounds(163, 106, 226, 24);
 		frame.getContentPane().add(comboBox);
 		
 		JButton btnSelectFile = new JButton("Select File");
-		btnSelectFile.setBounds(25, 148, 114, 23);
+		btnSelectFile.setBounds(94, 180, 114, 23);
 		btnSelectFile.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -106,11 +106,11 @@ public class WindowConvert {
 		
 		txtFile = new JTextField();
 		txtFile.setColumns(10);
-		txtFile.setBounds(151, 145, 200, 30);
+		txtFile.setBounds(220, 177, 200, 30);
 		frame.getContentPane().add(txtFile);
 		
 		JButton btnStartConversion = new JButton("Start Conversion");
-		btnStartConversion.setBounds(58, 297, 262, 36);
+		btnStartConversion.setBounds(127, 329, 262, 36);
 		btnStartConversion.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 					if (txtFile.getText() != null && txtOutput.getText() != null && txtCollection.getText() != null) {
@@ -127,7 +127,7 @@ public class WindowConvert {
 		frame.getContentPane().add(btnStartConversion);
 		
 		JButton btnOutputPath = new JButton("Output Path");
-		btnOutputPath.setBounds(12, 186, 127, 23);
+		btnOutputPath.setBounds(81, 218, 127, 23);
 		btnOutputPath.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
@@ -161,16 +161,16 @@ public class WindowConvert {
 		
 		txtOutput = new JTextField();
 		txtOutput.setColumns(10);
-		txtOutput.setBounds(151, 183, 200, 30);
+		txtOutput.setBounds(220, 215, 200, 30);
 		frame.getContentPane().add(txtOutput);
 		
 		txtCollection = new JTextField();
 		txtCollection.setColumns(10);
-		txtCollection.setBounds(151, 110, 186, 29);
+		txtCollection.setBounds(220, 142, 186, 29);
 		frame.getContentPane().add(txtCollection);
 		
 		JLabel labelName = new JLabel("Collection Name");
-		labelName.setBounds(26, 124, 130, 15);
+		labelName.setBounds(95, 156, 130, 15);
 		frame.getContentPane().add(labelName);
 
 	}

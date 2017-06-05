@@ -18,7 +18,6 @@ import javax.swing.JOptionPane;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import upload.InitializeMetadata;
-import upload.MetadataGeneral;
 import upload.UploadConstants;
 
 import javax.swing.SwingConstants;
@@ -38,7 +37,12 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-
+/** Window for uploading collection
+ * 
+ *
+ * @author Simon Lacis
+ *
+ */
 
 
 public class WindowExportUpload {
@@ -120,7 +124,7 @@ public class WindowExportUpload {
 				// create new collection 
 				if (generateColMD){
 					try {
-						response = createCollection(key, collectionMetadata, collectionDetails);
+						response = createCollection(key, collectionMetadata, collectionDetails,  contextMetadata);
 						uploadResult.put("Create collection", response);
 //						if (response == 200) {
 //							JOptionPane.showMessageDialog(null, "Collection created successfuly!", 
@@ -144,7 +148,8 @@ public class WindowExportUpload {
 						response = updateItems(key, 
 								collectionDetails,
 								recItemMetadata,
-								recItemStatus);
+								recItemStatus,
+								contextMetadata);
 						uploadResult.put("Items updated", response);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -218,10 +223,10 @@ public class WindowExportUpload {
 
 
 	// Function to create collection
-	public int createCollection(String key, JSONObject collectionMetadata, HashMap<String, String> collectionDetails) throws IOException {
+	public int createCollection(String key, JSONObject collectionMetadata, HashMap<String, String> collectionDetails, JSONObject contextMetadata) throws IOException {
 		try {
 			JSONObject metadatad = new JSONObject();
-			collectionMetadata.put("@context", collectionDetails.get("context"));
+			collectionMetadata.put("@context",  contextMetadata.toString());
 			metadatad.put("collection_metadata", collectionMetadata);
 			String url = UploadConstants.CATALOG_URL.substring(0, UploadConstants.CATALOG_URL.length()-1 )+ 
 					"?name=" + collectionDetails.get("collectionName")
@@ -259,7 +264,8 @@ public class WindowExportUpload {
 	public int updateItems(String key, 
 			HashMap<String, String> collectionDetails,
 			HashMap<String, JSONObject> recItemMetadata,
-			HashMap<String, Integer> recItemStatus) throws IOException {
+			HashMap<String, Integer> recItemStatus,
+			JSONObject contextMetadata) throws IOException {
 		try {
 
 			for (String item : recItemMetadata.keySet()) {
@@ -268,7 +274,7 @@ public class WindowExportUpload {
 						JSONObject metadatad = new JSONObject();
 						JSONObject tempItem = recItemMetadata.get(item);
 //						tempItem.put("@context", InitializeMetadata.initContext(collectionDetails.get("metadataField")));
-						tempItem.put("@context", collectionDetails.get("context"));
+						tempItem.put("@context", contextMetadata.toString());
 						metadatad.put("metadata", tempItem);
 						System.out.println(metadatad.toString());
 						String url = UploadConstants.CATALOG_URL 

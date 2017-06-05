@@ -35,7 +35,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 
-/** Window for creating new collection
+/** Window for updating existing collection
  * 
  *
  * @author Simon Lacis
@@ -72,12 +72,12 @@ public class WindowUpdateCollection {
 	 */
 	private void initialize(String key) {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 400, 400);
+		frame.setBounds(100, 100, 500, 500);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 
 		JTextField Filechooser = new JTextField();
-		Filechooser.setBounds(166, 199, 200, 30);
+		Filechooser.setBounds(219, 242, 200, 30);
 		frame.getContentPane().add(Filechooser);
 		Filechooser.setColumns(10);
 		JButton btnAdd = new JButton("Directory");
@@ -109,7 +109,7 @@ public class WindowUpdateCollection {
 				}
 			}
 		});
-		btnAdd.setBounds(40, 202, 114, 23);
+		btnAdd.setBounds(93, 245, 114, 23);
 		frame.getContentPane().add(btnAdd);
 
 		JRadioButton addnewYes, addnewNo;
@@ -141,6 +141,7 @@ public class WindowUpdateCollection {
 					btnFilenameMetadata.setVisible(false);
 					btnAdd.setVisible(false);
 					newItem = false;
+					System.out.println(newItem.toString());
 				}
 
 			}
@@ -155,17 +156,18 @@ public class WindowUpdateCollection {
 		operPanel.setBorder(operBorder);
 		operPanel.add(addnewNo);
 		operPanel.add(addnewYes);
-		operPanel.setBounds(103, 113, 223, 47);
+		operPanel.setBounds(156, 156, 223, 50);
 
 
 
 		frame.getContentPane().add(operPanel);
 
 		JButton btnCreateNewCollection = new JButton("Generate Metadata");
-		btnCreateNewCollection.setBounds(64, 334, 262, 36);
+		btnCreateNewCollection.setBounds(117, 377, 262, 36);
 		btnCreateNewCollection.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (path == null  || fileMetadataSet == false && newItem == true){
+				System.out.println(newItem.toString());
+				if (newItem == true && (path == null  || fileMetadataSet == false)){
 					//Error message : Null Path 
 					JOptionPane.showMessageDialog(null, "Please select path and file metadata", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
 				} else {
@@ -188,11 +190,11 @@ public class WindowUpdateCollection {
 
 		collectionName = new JTextField();
 		collectionName.setColumns(10);
-		collectionName.setBounds(180, 24, 186, 29);
+		collectionName.setBounds(233, 67, 186, 29);
 		frame.getContentPane().add(collectionName);
 
 		JLabel lblCollectionName = new JLabel("Collection Name");
-		lblCollectionName.setBounds(41, 38, 130, 15);
+		lblCollectionName.setBounds(93, 74, 130, 15);
 		frame.getContentPane().add(lblCollectionName);
 
 
@@ -202,7 +204,7 @@ public class WindowUpdateCollection {
 		Border collectionBorder = BorderFactory.createTitledBorder("Update Collection MD");
 		collectionMDPanel.setBorder(collectionBorder);
 		//		collectionMDPanel.setBorder(null);
-		collectionMDPanel.setBounds(9, 70, 177, 38);
+		collectionMDPanel.setBounds(65, 98, 177, 48);
 		frame.getContentPane().add(collectionMDPanel);
 
 		JRadioButton radioButtonYes = new JRadioButton("Yes");
@@ -243,7 +245,7 @@ public class WindowUpdateCollection {
 		JPanel itemMDPanel = new JPanel();
 		Border itemBorder = BorderFactory.createTitledBorder("Update Item MD");
 		itemMDPanel.setBorder(itemBorder);
-		itemMDPanel.setBounds(202, 70, 173, 38);
+		itemMDPanel.setBounds(258, 98, 173, 48);
 		frame.getContentPane().add(itemMDPanel);
 
 		JRadioButton radioButtonYesItem = new JRadioButton("Yes");
@@ -281,7 +283,7 @@ public class WindowUpdateCollection {
 
 		JPanel panelDelete = new JPanel();
 		panelDelete.setBorder(new TitledBorder(null, "Delete all items in collection", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		panelDelete.setBounds(84, 278, 223, 47);
+		panelDelete.setBounds(137, 321, 223, 47);
 		frame.getContentPane().add(panelDelete);
 
 		JRadioButton radioButtonNoDelete = new JRadioButton("No");
@@ -329,16 +331,16 @@ public class WindowUpdateCollection {
 
 			}
 		});
-		btnFilenameMetadata.setBounds(114, 236, 200, 23);
+		btnFilenameMetadata.setBounds(167, 279, 200, 23);
 		frame.getContentPane().add(btnFilenameMetadata);
 
 		JLabel lblMetadata = new JLabel("Metadata Prefix");
-		lblMetadata.setBounds(39, 170, 130, 15);
+		lblMetadata.setBounds(92, 213, 130, 15);
 		frame.getContentPane().add(lblMetadata);
 
 		txtMetadataPrefix = new JTextField();
 		txtMetadataPrefix.setColumns(10);
-		txtMetadataPrefix.setBounds(178, 165, 186, 29);
+		txtMetadataPrefix.setBounds(231, 208, 186, 29);
 		frame.getContentPane().add(txtMetadataPrefix);
 		radioButtonNoDelete.addActionListener(new ActionListener() {
 

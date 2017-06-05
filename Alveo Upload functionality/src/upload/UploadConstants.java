@@ -1,6 +1,13 @@
 package upload;
 
 import java.util.HashMap;
+
+/** Class with constants used over multiple classes
+ * 
+ *
+ * @author Simon Lacis
+ *
+ */
 import java.util.Map;
 
 public class UploadConstants {

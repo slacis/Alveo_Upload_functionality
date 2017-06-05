@@ -23,10 +23,10 @@ import javax.swing.JRadioButton;
 import javax.swing.border.TitledBorder;
 import javax.swing.JCheckBox;
 
-/** A upload function GUI class 
+/** Window for choosing how file metadata is read into the system
  * 
  *
- * @author Kun He
+ * @author Simon Lacis
  *
  */
 
@@ -55,7 +55,7 @@ public class WindowFileMetadata {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 400, 400);
+		frame.setBounds(100, 100, 400, 480);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 

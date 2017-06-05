@@ -7,7 +7,7 @@ import net.sf.json.JSONObject;
 
 /**
  * A class to generate metadata for metadata builder
- * Reads CSV file if exists and supports mapping
+ *
  * 
  * 
  * @author Simon Lacis

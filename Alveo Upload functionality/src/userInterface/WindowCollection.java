@@ -11,10 +11,10 @@ import javax.swing.JFrame;
 
 import net.sf.json.JSONObject;
 
-/** A upload function GUI class 
+/** Main menu screen
  * 
  *
- * @author Kun He
+ * @author Simon Lacis
  *
  */
 
@@ -42,7 +42,7 @@ public class WindowCollection {
 	 */
 	private void initialize(String key) {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 400, 400);
+		frame.setBounds(100, 100, 350, 350);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
@@ -55,7 +55,7 @@ public class WindowCollection {
 				updateWindow.frame.setVisible(true);
 				}
 		});
-		btnUpdateExistingCol.setBounds(68, 183, 262, 36);
+		btnUpdateExistingCol.setBounds(39, 140, 262, 36);
 		frame.getContentPane().add(btnUpdateExistingCol);
 		
 		JButton btnCreateNewCollection = new JButton("Create New Collection");
@@ -65,11 +65,11 @@ public class WindowCollection {
 				createWindow.frame.setVisible(true);
 				}
 		});
-		btnCreateNewCollection.setBounds(68, 130, 262, 36);
+		btnCreateNewCollection.setBounds(39, 66, 262, 36);
 		frame.getContentPane().add(btnCreateNewCollection);
 		
 		JButton btnConvertCollectionTo = new JButton("Convert Collection ");
-		btnConvertCollectionTo.setBounds(68, 231, 262, 36);
+		btnConvertCollectionTo.setBounds(39, 211, 262, 36);
 		btnConvertCollectionTo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				WindowConvert convertWindow= new WindowConvert();

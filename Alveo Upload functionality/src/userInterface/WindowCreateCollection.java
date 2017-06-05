@@ -67,7 +67,7 @@ public class WindowCreateCollection {
 	 */
 	private void initialize(String key) {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 400, 400);
+		frame.setBounds(100, 100, 500, 500);
 		frame.setLocationRelativeTo(null);
 		frame.getContentPane().setLayout(null);
 		licenseList.put("AusTalk Terms of Use", 1);
@@ -121,15 +121,15 @@ public class WindowCreateCollection {
 		operPanel.setBorder(operBorder);
 		operPanel.add(privateCollection);
 		operPanel.add(publicCollection);
-		operPanel.setBounds(77, 212, 200, 78);
+		operPanel.setBounds(125, 263, 200, 78);
 		frame.getContentPane().add(operPanel);
 		
 		JComboBox comboBox = new JComboBox(new DefaultComboBoxModel(licenseList.keySet().toArray()));
-		comboBox.setBounds(180, 58, 183, 29);
+		comboBox.setBounds(228, 109, 183, 29);
 		frame.getContentPane().add(comboBox);
 
 		JButton btnCreateNewCollection = new JButton("Create New Collection");
-		btnCreateNewCollection.setBounds(64, 302, 262, 36);
+		btnCreateNewCollection.setBounds(112, 353, 262, 36);
 		btnCreateNewCollection.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (path == null || fileMetadataSet == false){
@@ -151,21 +151,21 @@ public class WindowCreateCollection {
 		frame.getContentPane().add(btnCreateNewCollection);
 
 		JLabel lblLicense = new JLabel("License");
-		lblLicense.setBounds(41, 72, 130, 15);
+		lblLicense.setBounds(89, 123, 130, 15);
 		frame.getContentPane().add(lblLicense);
 
 		textField_1 = new JTextField();
 		textField_1.setColumns(10);
-		textField_1.setBounds(180, 24, 186, 29);
+		textField_1.setBounds(228, 75, 186, 29);
 		frame.getContentPane().add(textField_1);
 
 		JLabel lblCollectionName = new JLabel("Collection Name");
-		lblCollectionName.setBounds(41, 38, 130, 15);
+		lblCollectionName.setBounds(89, 89, 130, 15);
 		frame.getContentPane().add(lblCollectionName);
 
 
 		JTextField Filechooser = new JTextField();
-		Filechooser.setBounds(167, 140, 200, 30);
+		Filechooser.setBounds(215, 191, 200, 30);
 		frame.getContentPane().add(Filechooser);
 		Filechooser.setColumns(10);
 		JButton btnAdd = new JButton("Directory");
@@ -197,16 +197,16 @@ public class WindowCreateCollection {
 				}
 			}
 		});
-		btnAdd.setBounds(41, 143, 114, 23);
+		btnAdd.setBounds(89, 194, 114, 23);
 		frame.getContentPane().add(btnAdd);
 
 		JLabel lblMetadataPrefix = new JLabel("Metadata Prefix");
-		lblMetadataPrefix.setBounds(41, 106, 130, 15);
+		lblMetadataPrefix.setBounds(89, 157, 130, 15);
 		frame.getContentPane().add(lblMetadataPrefix);
 
 		prefix = new JTextField();
 		prefix.setColumns(10);
-		prefix.setBounds(180, 99, 186, 29);
+		prefix.setBounds(228, 150, 186, 29);
 		frame.getContentPane().add(prefix);
 		
 		JButton btnFilenameMetadata = new JButton("Filename Metadata");
@@ -228,7 +228,7 @@ public class WindowCreateCollection {
 	
 			}
 		});
-		btnFilenameMetadata.setBounds(102, 180, 200, 23);
+		btnFilenameMetadata.setBounds(150, 231, 200, 23);
 		frame.getContentPane().add(btnFilenameMetadata);
 
 	}

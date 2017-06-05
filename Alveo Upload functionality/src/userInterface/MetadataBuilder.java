@@ -369,7 +369,7 @@ public class MetadataBuilder {
 
 		Font font1 = new Font("SansSerif", Font.BOLD, 12);
 		frame = new JFrame();
-		frame.setSize(800,600);
+		frame.setSize(850,650);
 		frame.setLocationRelativeTo(null);
 		//		frame.setBounds(100, 100, 418, 449);
 		frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -435,6 +435,7 @@ public class MetadataBuilder {
 					textAreaNo = 3;
 					itemMetaCombo.setVisible(true);
 					docMetaCombo.setVisible(true);
+//					jsonToTable(recItemMetadata.get(comboBoxMetadata.getSelectedItem()));
 				}
 
 			}
@@ -462,7 +463,7 @@ public class MetadataBuilder {
 
 		// JComboBox for metadata type selection
 		try{
-			br = new BufferedReader(new FileReader("csv/metadatatypes.csv"));
+			br = new BufferedReader(new FileReader("data" + File.separator + "metadatatypes.csv"));
 			String line = null;
 			line = br.readLine();
 			values = line.split(",");
@@ -531,7 +532,7 @@ public class MetadataBuilder {
 					} else if (textAreaNo ==3){
 						//Load into table
 						try {
-						jsonToTable(recItemMetadata.get(selected));
+							jsonToTable(recItemMetadata.get(selected));
 						} catch (java.lang.NullPointerException e) {
 							JOptionPane.showMessageDialog(null,"No item metadata found. Check readable file extensions"
 									+ "in filename metadata");
@@ -636,12 +637,12 @@ public class MetadataBuilder {
 								recItemStatus.put(key, 1);
 							}
 						}
-						
+
 					} // Update context
-					 else if (textAreaNo == 5){
-							System.out.println("Update context");
-							contextMetadata = getTableData(table);
-						}
+					else if (textAreaNo == 5){
+						System.out.println("Update context");
+						contextMetadata = getTableData(table);
+					}
 					// Update collection
 				} else if (textAreaNo == 4){
 					collectionMetadata = getTableData(table);
@@ -767,6 +768,8 @@ public class MetadataBuilder {
 					lblAlveoItem.setVisible(true);
 					itemMetaCombo.setVisible(true);
 					docMetaCombo.setVisible(true);
+					jsonToTable(recDocMetadata.get(itemMetaCombo.getSelectedItem().toString()).
+							get(docMetaCombo.getSelectedItem().toString()));
 				}
 			}
 

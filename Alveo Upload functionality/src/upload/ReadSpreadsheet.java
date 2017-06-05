@@ -22,8 +22,8 @@ public class ReadSpreadsheet {
 
 	static HashMap<String, JSONObject> importedMetadata = new HashMap<String, JSONObject>();
 	static Map<String, String> META_MAP = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-	private static final String FILE_NAME = "/media/sf_sharedwithvirtual/mq_emotional.xlsx";
-	public static final String MAPPING = "/media/sf_sharedwithvirtual/metadatamappings.xlsx";
+//	private static final String FILE_NAME = "/media/sf_sharedwithvirtual/mq_emotional.xlsx";
+	public static final String MAPPING = "data/metadatamappings.xlsx";
 //	public static void main(String[] args) {
 //
 //		readMeta(FILE_NAME, "Recordings", getMap(MAPPING,"Mapping", META_MAP), "mbep", true, true, true, "_");
