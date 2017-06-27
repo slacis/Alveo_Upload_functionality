@@ -283,7 +283,7 @@ public class MetadataBuilder {
 						String firstMeta = ((JSONObject) metadataMapping.get("mapping")).get("first").toString();
 						String secondMeta = ((JSONObject) metadataMapping.get("mapping")).get("second").toString();
 						String thirdMeta = ((JSONObject) metadataMapping.get("mapping")).get("third").toString();
-						String forthMeta = ((JSONObject) metadataMapping.get("mapping")).get("forth").toString();
+						String forthMeta = ((JSONObject) metadataMapping.get("mapping")).get("fourth").toString();
 						if (!(firstMeta.equals(""))){
 							String[] multipleUse = firstMeta.split(",");
 							for (String metaTerm: multipleUse){
@@ -435,7 +435,7 @@ public class MetadataBuilder {
 					textAreaNo = 3;
 					itemMetaCombo.setVisible(true);
 					docMetaCombo.setVisible(true);
-//					jsonToTable(recItemMetadata.get(comboBoxMetadata.getSelectedItem()));
+					jsonToTable(recItemMetadata.get(itemMetaCombo.getSelectedItem()));
 				}
 
 			}

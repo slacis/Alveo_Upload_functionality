@@ -134,15 +134,19 @@ public class WindowCreateCollection {
 			public void actionPerformed(ActionEvent arg0) {
 				if (path == null || fileMetadataSet == false){
 				//Error message : Null Path 
-				JOptionPane.showMessageDialog(null, "Please select path and set file metadata", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(null, "Please select path and set file metadata", "Error Message", JOptionPane.INFORMATION_MESSAGE);
 				} else {
 				HashMap<String, String> collectionDetails = new HashMap<String,String>();
 						collectionDetails.put("collectionName",textField_1.getText());
 						collectionDetails.put("metadataField",prefix.getText());
 						collectionDetails.put("private", privateField);
 						collectionDetails.put("license", licenseList.get(comboBox.getSelectedItem()).toString());
+				try {
 				MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, true, false, false, true, metadataMapping);
 				builder.frame.setVisible(true);
+				} catch (Exception e) {
+					JOptionPane.showMessageDialog(null, "Problem occurred. Please ensure delimeter matches", "Error Message", JOptionPane.INFORMATION_MESSAGE);
+				}
 
 				}
 	
@@ -213,7 +217,7 @@ public class WindowCreateCollection {
 		btnFilenameMetadata.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				fileMetadataSet = true;
-				WindowFileMetadata fileMeta = new WindowFileMetadata();
+				WindowFileMetadata fileMeta = new WindowFileMetadata(metadataMapping);
 				fileMeta.frame.setVisible(true);
 				// Listener to get built Metadata
 				fileMeta.frame.addWindowListener(new WindowAdapter() {

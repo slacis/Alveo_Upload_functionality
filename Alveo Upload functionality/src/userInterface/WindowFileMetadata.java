@@ -45,15 +45,20 @@ public class WindowFileMetadata {
 	 * Create the application.
 	 * @param key 
 	 */
-	public WindowFileMetadata() {		
-		initialize();
+	public WindowFileMetadata(JSONObject metadataMappings) {		
+		initialize(metadataMappings);
 	}
 
 	/**
 	 * Initialize the contents of the frame.
 	 * @param key 
 	 */
-	private void initialize() {
+	private void initialize(JSONObject metadataMappings) {
+		this.metadataMapping = metadataMappings;
+
+//			else {
+//			metadataMapping = new JSONObject();
+//		}
 		frame = new JFrame();
 		frame.setBounds(100, 100, 400, 480);
 		frame.setLocationRelativeTo(null);
@@ -105,7 +110,7 @@ public class WindowFileMetadata {
 		String[] first = {"first", "", "item"};
 		String[] second = {"second", "", "item"};
 		String[] third = {"third", "", "item"};
-		String[] forth = {"forth", "", "item"};
+		String[] forth = {"fourth", "", "item"};
 		model.addRow(first);
 		model.addRow(second);
 		model.addRow(third);
@@ -160,6 +165,48 @@ public class WindowFileMetadata {
 		chckbxForth = new JCheckBox("forth");
 		chckbxForth.setBounds(281, 300, 91, 23);
 		frame.getContentPane().add(chckbxForth);
+		
+		if (metadataMapping.get("extensions")!=null){
+			// mappings
+//			metadataMapping.put("mapping", getTableData(table));
+			// extensions
+			System.out.println((String) metadataMapping.get("extensions"));
+			txtWavtxt.setText((String) metadataMapping.get("extensions"));
+			// delimeter 
+			textField.setText((String) metadataMapping.get("delim"));
+			// use in item name
+			if ((Boolean)metadataMapping.get("useFirst") == true) {
+				chckbxFirst.setSelected(true);
+			} else {
+				chckbxFirst.setSelected(false);
+			} 	
+			if ((Boolean)metadataMapping.get("useSecond") == true) {
+				chckbxSecond.setSelected(true);
+			} else {
+				chckbxSecond.setSelected(false);
+			}
+			if ((Boolean)metadataMapping.get("useThird") == true) {
+				chckbxThird.setSelected(true);
+			} else {
+				chckbxThird.setSelected(false);
+			}
+			if ((Boolean)metadataMapping.get("useForth") == true) {
+				chckbxForth.setSelected(true);
+			} else {
+				chckbxForth.setSelected(false);
+			}
+			JSONObject map = (JSONObject) metadataMapping.get("mapping");
+			String[] firstD = {"first", map.getString("first"), "item"};
+			String[] secondD = {"second", map.getString("second"), "item"};
+			String[] thirdD = {"third", map.getString("third"), "item"};
+			String[] forthD = {"fourth", map.getString("fourth"), "item"};
+			model.setRowCount(0);
+			model.addRow(firstD);
+			model.addRow(secondD);
+			model.addRow(thirdD);
+			model.addRow(forthD);
+			table = new JTable(model);
+		} 
 
 
 

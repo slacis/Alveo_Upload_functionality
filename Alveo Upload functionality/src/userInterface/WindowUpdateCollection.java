@@ -169,7 +169,7 @@ public class WindowUpdateCollection {
 				System.out.println(newItem.toString());
 				if (newItem == true && (path == null  || fileMetadataSet == false)){
 					//Error message : Null Path 
-					JOptionPane.showMessageDialog(null, "Please select path and file metadata", "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Please select path and file metadata", "Error Message", JOptionPane.INFORMATION_MESSAGE);
 				} else {
 					HashMap<String, String> collectionDetails = new HashMap<String,String>();
 					collectionDetails.put("collectionName",collectionName.getText());
@@ -179,7 +179,7 @@ public class WindowUpdateCollection {
 						MetadataBuilder builder = new MetadataBuilder(path, collectionDetails, key, newItem, itemMD, collectionMD, false, metadataMapping);
 						builder.frame.setVisible(true);
 					} catch (java.lang.ArrayIndexOutOfBoundsException e) {
-						JOptionPane.showMessageDialog(null, "Array Index Error, check delimeter:" + e.getMessage(), "InfoBox: " + "Error Message", JOptionPane.INFORMATION_MESSAGE);
+						JOptionPane.showMessageDialog(null, "Array Index Error, check delimeter:" + e.getMessage(),  "Error Message", JOptionPane.INFORMATION_MESSAGE);
 					}
 
 				}
@@ -315,7 +315,7 @@ public class WindowUpdateCollection {
 		btnFilenameMetadata = new JButton("Filename Metadata");
 		btnFilenameMetadata.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				WindowFileMetadata fileMeta = new WindowFileMetadata();
+				WindowFileMetadata fileMeta = new WindowFileMetadata(metadataMapping);
 				fileMetadataSet = true;
 				fileMeta.frame.setVisible(true);
 				// Listener to get built Metadata
