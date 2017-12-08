@@ -23,6 +23,8 @@ import bioc.io.standard.BioCFactoryImpl;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import upload.UploadConstants;
+
 /**
  * The primary class to use to parsed the BioC format file and extract 
  * all kinds of annotations such passage， sentence， annotation and relation.
@@ -36,9 +38,9 @@ import net.sf.json.JSONObject;
 
 public class BioC2Json {
 		
-	public static void writeFile(String filename, String sets, File file)  
+	public static void writeFile(String filename, String sets, File file, String outputPath)  
             throws IOException { 
-		File tf = new File(file,filename);
+		File tf = new File(outputPath, filename);
         FileWriter fw = new FileWriter(tf);  
         PrintWriter out = new PrintWriter(fw);  
         out.write(sets);  
@@ -47,7 +49,7 @@ public class BioC2Json {
         out.close();  
     }
 	
-	public static List<String> writeJson(String path, String filename, String collection) throws XMLStreamException, IOException{
+	public static List<String> writeJson(String path, String filename, String collection, String outputPath) throws XMLStreamException, IOException{
 		
 		List<String> docIDs = new ArrayList<String>();
 	
@@ -67,7 +69,7 @@ public class BioC2Json {
 			String docID = d.getID();
 			docIDs.add(docID);
 			
-			String docUrl = "https://app.alveo.edu.au/catalog/"+ filename + "/" + docID + ".txt";
+			String docUrl = UploadConstants.CATALOG_URL+ filename + "/" + docID + ".txt";
 		
 			JSONObject docjsonObject = new JSONObject();
 			JSONObject properties = new JSONObject();
@@ -88,7 +90,7 @@ public class BioC2Json {
 		        String ptext = p.getText();
 		        
 				JSONObject passagejsonObject = new JSONObject();
-				passagejsonObject.element("@id", "https://app.alveo.edu.au/catalog/"+ collection + "/" + docID +"/annotation/passage" + Integer.toString(passageId) );
+				passagejsonObject.element("@id", UploadConstants.CATALOG_URL+ collection + "/" + docID +"/annotation/passage" + Integer.toString(passageId) );
 				passageId = passageId+1;
 				passagejsonObject.element("type", "http://ns.ausnc.org.au/schemas/annotation/collection/passage");
 				passagejsonObject.element("start", passageOffset);
@@ -104,7 +106,7 @@ public class BioC2Json {
 					
 					JSONObject pannjsonObject = new JSONObject();				    
 				    pannjsonObject.element("ann-id", annID);
-				    pannjsonObject.element("@id", "https://app.alveo.edu.au/catalog/"+collection + "/" + docID + "/annotation/" + annID);
+				    pannjsonObject.element("@id", UploadConstants.CATALOG_URL+collection + "/" + docID + "/annotation/" + annID);
 				    pannjsonObject.element("type", "http://ns.ausnc.org.au/schemas/annotation/collection/annotation");
 		            
 				    
@@ -162,7 +164,7 @@ public class BioC2Json {
 			        String stext = sen.getText();
 			        
 					JSONObject senpassagejsonObject = new JSONObject();
-					senpassagejsonObject.element("@id", "https://app.alveo.edu.au/catalog/"+collection + "/" + docID + "/annotation/passage" + Integer.toString(passageId)+"/sentence"+ Integer.toString(sentenceID) );
+					senpassagejsonObject.element("@id", UploadConstants.CATALOG_URL+collection + "/" + docID + "/annotation/passage" + Integer.toString(passageId)+"/sentence"+ Integer.toString(sentenceID) );
 					senpassagejsonObject.element("type", "http://ns.ausnc.org.au/schemas/annotation/collection/sentence");
 					sentenceID = sentenceID +1;
 					senpassagejsonObject.element("start", senOffset);
@@ -177,7 +179,7 @@ public class BioC2Json {
 						
 						JSONObject senannjsonObject = new JSONObject();					    
 					    senannjsonObject.element("ann-id", annID);
-					    senannjsonObject.element("@id", "https://app.alveo.edu.au/catalog/"+collection + "/" + docID + "/annotation/" + annID);
+					    senannjsonObject.element("@id", UploadConstants.CATALOG_URL+collection + "/" + docID + "/annotation/" + annID);
 					    senannjsonObject.element("type", "http://ns.ausnc.org.au/schemas/annotation/collection/annotation");
 			            
 					    
@@ -217,7 +219,7 @@ public class BioC2Json {
 						
 						JSONObject senrejsonObject = new JSONObject();					    
 						senrejsonObject.element("r-id", relationID);
-						senrejsonObject.element("@id", "https://app.alveo.edu.au/catalog/"+collection + "/" + docID + "/annotation/" + relationID);
+						senrejsonObject.element("@id", UploadConstants.CATALOG_URL+collection + "/" + docID + "/annotation/" + relationID);
 						senrejsonObject.element("type", "http://ns.ausnc.org.au/schemas/annotation/collection/relation");
 						
 						
@@ -252,7 +254,7 @@ public class BioC2Json {
 					String relationID = pre.getID();
 					JSONObject passagerejsonObject = new JSONObject();					    
 					passagerejsonObject.element("r-id", relationID);
-					passagerejsonObject.element("@id", "https://app.alveo.edu.au/catalog/"+collection + "/" + docID + "/annotation/" + relationID);
+					passagerejsonObject.element("@id", UploadConstants.CATALOG_URL+collection + "/" + docID + "/annotation/" + relationID);
 					passagerejsonObject.element("type", "http://ns.ausnc.org.au/schemas/annotation/collection/relation");
 					
 					// infon
@@ -286,7 +288,7 @@ public class BioC2Json {
 				String relationID = dre.getID();
 				JSONObject docrejsonObject = new JSONObject();					    
 				docrejsonObject.element("r-id", relationID);
-				docrejsonObject.element("@id", "https://app.alveo.edu.au/catalog/"+collection + "/" + docID + "/annotation/" + relationID);
+				docrejsonObject.element("@id", UploadConstants.CATALOG_URL+collection + "/" + docID + "/annotation/" + relationID);
 				docrejsonObject.element("type", "http://ns.ausnc.org.au/schemas/annotation/collection/relation");
 				
 				// infon
@@ -316,7 +318,7 @@ public class BioC2Json {
 			String text_fileName;
 			text_fileName =  docID + ".json";
 			docjsonObject.element("alveo:annotations", annArray);
-			writeFile(text_fileName, docjsonObject.toString(),bf.getParentFile());
+			writeFile(text_fileName.toLowerCase(), docjsonObject.toString(),bf.getParentFile(), outputPath);
 			
 		}
 				

@@ -13,7 +13,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
  * 
  * @author Kun He
  *
- */
+ */ 
 
 public class AnnotationUpload {
 	
@@ -23,9 +23,9 @@ public class AnnotationUpload {
 		
 		HttpClient httpclient = new HttpClient();
 		
-		String url =  "https://app.alveo.edu.au/catalog/" + collection +"/" + docID + "/annotations";
+		String url =  UploadConstants.CATALOG_URL + collection +"/" + docID + "/annotations";
 		System.out.println(url);
-		File file =  new File(path + "\\" + docID + ".json");
+		File file =  new File(path);
 
 		
 		try{
